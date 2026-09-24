@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>52ª Sagra di Penco — Leccio, 16·17·18 ottobre 2026</title>
+<meta name="description" content="52ª Sagra di Penco a Leccio (Reggello): cena francese, Penco-lone a Sammezzano, pizzeria, ciccia da asporto, mostre, lotterie e la partita della Leccese. Programma e prenotazioni.">
+<meta name="theme-color" content="#204f7a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=League+Gothic&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{
+  --carta:#f1e6c8; --carta-scura:#e3d3a9; --carta-bordo:#cdbb8d;
+  --rosso:#c6352c; --rosso-scuro:#9e281f; --blu:#204f7a; --blu-scuro:#173a5a;
+  --inchiostro:#2a2622; --tenue:#5b544b; --bianco:#fbf6ea;
+  --titoli:'Playfair Display','Bodoni 72',Georgia,serif;
+  --gotica:'League Gothic','Oswald',Impact,sans-serif;
+  --testo:'Libre Bodoni','Bodoni 72',Georgia,serif;
+  --condensata:'Oswald','Arial Narrow',sans-serif;
+  --col:720px; --tab-h:54px;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth;overflow-x:hidden}
+@media (prefers-reduced-motion:reduce){html{scroll-behavior:auto}}
+body{margin:0;overflow-x:hidden;font-family:var(--testo);font-size:17px;line-height:1.5;color:var(--inchiostro);background:var(--carta);-webkit-font-smoothing:antialiased}
+a{color:var(--blu)}
+img{max-width:100%;display:block}
+.col{max-width:var(--col);margin:0 auto;padding:0 26px}
+h2.sez{font-family:var(--titoli);font-weight:700;color:var(--rosso);font-size:1.7rem;line-height:1.1;margin:0 0 .25rem;letter-spacing:.01em}
+p.sotto{font-style:italic;color:var(--tenue);margin:0 0 1rem}
+
+.tricolore{position:fixed;top:0;left:0;right:0;z-index:30;height:calc(6px + var(--safe-top));
+  background:linear-gradient(var(--carta) 0 0) top/100% var(--safe-top) no-repeat,
+             linear-gradient(90deg,var(--blu) 0 33.3%,var(--bianco) 33.3% 66.6%,var(--rosso) 66.6%)}
+
+/* ===================== APERTURA ===================== */
+.hero{padding:calc(22px + var(--safe-top)) 26px 0;text-align:center}
+.hero h1{font-family:var(--titoli);font-weight:700;color:var(--rosso);text-transform:uppercase;font-size:clamp(2.4rem,11.5vw,5rem);line-height:.95;margin:0 0 .1em}
+.hero h1 .num{font-style:italic;white-space:nowrap}
+.hero h1 .num sup{font-size:.42em;vertical-align:1.1em;text-transform:none}
+.hero-fig{position:relative;height:clamp(300px,62vw,520px);overflow:hidden;margin:0 -26px;max-width:none}
+.hero-img{width:100%;height:100%;object-fit:cover;object-position:50% 8%;transform:scale(1.28);transform-origin:50% 12%}
+.hero-velo{position:absolute;inset:0;background:linear-gradient(to bottom,transparent 50%,rgba(241,230,200,.75) 78%,var(--carta) 100%)}
+.hero .luogo{font-family:var(--gotica);text-transform:uppercase;letter-spacing:.05em;font-size:clamp(1.5rem,6vw,2.3rem);line-height:1.05;margin:.2em 0 .3em}
+.hero .date{font-family:var(--titoli);font-weight:900;color:var(--blu);text-transform:uppercase;font-size:clamp(1.5rem,6.8vw,2.9rem);line-height:1.1;margin:0 0 .4em}
+.hero .date span{color:var(--rosso);font-weight:400;padding:0 .12em}
+.hero .nota{font-style:italic;color:var(--tenue);margin:0 auto;max-width:40ch;font-size:.95rem}
+
+/* ===================== PROGRAMMA ===================== */
+.programma{padding-top:.8rem;padding-bottom:.4rem}
+.giorno{padding:1.3rem 0 .4rem}
+.giorno h2{font-family:var(--gotica);color:var(--rosso);font-size:2.4rem;line-height:1;margin:0 0 .4rem;letter-spacing:.03em;border-bottom:3px double var(--rosso);padding-bottom:.3rem}
+.voce{display:grid;grid-template-columns:4.2rem minmax(0,1fr);gap:0 .8rem;padding:.9rem 0 1rem;border-bottom:1px solid var(--carta-bordo)}
+.voce:last-child{border-bottom:0}
+.voce .ora{font-family:var(--gotica);color:var(--blu);font-size:1.5rem;line-height:1;text-align:right;padding:.15rem .1rem 0 0}
+.voce .ora small{display:block;font-family:var(--testo);font-style:italic;color:var(--tenue);font-size:.75rem;margin-top:.2rem}
+.voce h3{font-family:var(--condensata);font-weight:500;font-size:1.25rem;line-height:1.2;margin:0 0 .1rem}
+.voce .tag{display:inline-block;vertical-align:middle;font-family:var(--condensata);font-weight:400;font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--rosso);border:1px solid var(--rosso);padding:.1rem .4rem;border-radius:2px;margin-left:.4rem}
+.voce .dove{font-style:italic;color:var(--tenue);margin:0 0 .4rem;font-size:.92rem}
+.voce p{margin:0 0 .45rem;font-size:.97rem}
+.voce .riga{display:flex;flex-wrap:wrap;gap:.3rem 1rem;margin:0 0 .7rem;font-size:.95rem}
+.voce .riga b{color:var(--blu)}
+.voce .riga .scad{color:var(--rosso)}
+.menu{margin:.2rem 0 .7rem;padding:.5rem .8rem;border:1px dashed var(--carta-bordo);font-size:.93rem}
+.menu b{display:block;font-family:var(--condensata);font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--blu);font-size:.85rem;margin-bottom:.2rem}
+.menu p{margin:0 0 .25rem}
+.azioni{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;max-width:520px;margin-top:.2rem}
+.azioni.singola{grid-template-columns:1fr}
+.bottone{display:flex;align-items:center;justify-content:center;gap:.4rem;min-height:50px;font-family:var(--condensata);font-weight:500;font-size:1.1rem;
+  letter-spacing:.05em;text-transform:uppercase;border:2px solid var(--rosso);color:var(--rosso);background:transparent;text-decoration:none;cursor:pointer;
+  border-radius:3px;padding:.5rem .8rem;line-height:1.1;-webkit-tap-highlight-color:transparent}
+.bottone.pieno{background:var(--rosso);color:var(--bianco)}
+.bottone.pieno:active{background:var(--rosso-scuro)}
+.bottone:focus-visible{outline:3px solid var(--blu);outline-offset:2px}
+
+/* ===================== INFO / FOOTER ===================== */
+footer{background:var(--carta-scura);padding:1.4rem 26px calc(1.8rem + var(--safe-bottom));text-align:center;margin-top:1.6rem;border-top:1px solid var(--carta-bordo)}
+.organizzatori{display:flex;flex-wrap:wrap;justify-content:center;align-items:center;gap:1rem 1.6rem;margin:0 0 1.2rem}
+.organizzatori img{height:72px;width:auto;max-width:150px;object-fit:contain}
+.patrocinio{display:flex;align-items:center;justify-content:center;gap:.8rem;margin:0 0 .8rem}
+.patrocinio img{height:64px;width:auto}
+.patrocinio span{font-style:italic;color:var(--tenue);text-align:left;line-height:1.25}
+.coccarda{width:22px;height:22px;border-radius:50%;display:inline-block;vertical-align:middle;margin:0 .3rem;background:radial-gradient(circle,var(--rosso) 0 24%,var(--bianco) 25% 52%,var(--blu) 53% 80%,transparent 81%)}
+footer p{margin:.2rem 0;font-size:.9rem;color:var(--tenue)}
+
+/* ===================== PRENOTAZIONE (schermo intero) ===================== */
+dialog.prenota{border:0;padding:0;margin:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;background:var(--carta);color:var(--inchiostro)}
+dialog.prenota::backdrop{background:rgba(23,58,90,.55)}
+.pren-in{max-width:var(--col);margin:0 auto;min-height:100%;display:flex;flex-direction:column;padding:calc(16px + var(--safe-top)) 26px calc(20px + var(--safe-bottom))}
+.pren-testa{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;border-bottom:2px solid var(--blu);padding-bottom:.6rem;margin-bottom:1rem}
+.pren-testa h2{font-family:var(--gotica);color:var(--rosso);font-size:2rem;line-height:1;margin:0;letter-spacing:.03em}
+.pren-testa p{margin:.2rem 0 0;font-style:italic;color:var(--tenue)}
+.chiudi{background:none;border:0;font-size:2rem;line-height:1;color:var(--blu);cursor:pointer;padding:0 .2rem;font-family:var(--testo)}
+.pren-in form{display:grid;gap:.9rem}
+.pren-in label{display:flex;flex-direction:column;gap:.3rem;font-style:italic;color:var(--tenue);font-size:.95rem}
+.pren-in input,.pren-in textarea{font:inherit;font-style:normal;font-size:17px;color:var(--inchiostro);padding:.75rem .8rem;border:1px solid var(--carta-bordo);background:var(--bianco);border-radius:3px;width:100%}
+.pren-in input:focus,.pren-in textarea:focus{outline:2px solid var(--blu);outline-offset:1px}
+.due{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.9rem}
+.esito{font-style:italic;min-height:1.3em;margin:0}
+.esito.ok{color:var(--blu);font-weight:700}
+.esito.errore{color:var(--rosso)}
+.pren-in .oppure{text-align:center;font-style:italic;color:var(--tenue);font-size:.95rem;margin:.4rem 0 0}
+.pren-in .privacy{font-size:.8rem;color:var(--tenue);margin:0}
+
+@media (min-width:720px){body{font-size:18px}.hero-fig{margin:0 auto;max-width:1100px}}
+</style>
+</head>
+<body>
+<div class="tricolore" aria-hidden="true"></div>
+
+<header class="hero">
+  <h1><span class="num">52<sup>a</sup></span><br>Sagra di Penco</h1>
+  <div class="hero-fig">
+    <img class="hero-img" src="penco-hero.webp" alt="Penco, soldato napoleonico, seduto su una panchina a Leccio con il cartello Paga e difende" fetchpriority="high">
+    <div class="hero-velo" aria-hidden="true"></div>
+  </div>
+  <p class="luogo">Leccio, Reggello (FI)</p>
+  <p class="date">16 <span>•</span> 17 <span>•</span> 18 ottobre 2026</p>
+  <p class="nota">Per gli eventi con prenotazione clicca su "Prenota" o chiama il numero indicato.</p>
+</header>
+
+<main>
+  <section class="col programma" id="programma">
+    <div id="giorni"></div>
+  </section>
+
+</main>
+
+<footer>
+  <div class="organizzatori" aria-label="Organizzatori">
+    <img src="logo-arci.png" alt="Circolo ARCI Aurora Leccio">
+    <img src="logo-vivileccio.png" alt="ViviLeccio">
+    <img src="logo-fpxa.png" alt="FPXA Comitato Sammezzano">
+    <img src="logo-leccese.png" alt="U.S.D. Leccese">
+  </div>
+  <p class="patrocinio"><img src="logo-comune.png" alt="Stemma del Comune di Reggello"><span>Con il patrocinio<br>del Comune di Reggello</span></p>
+  <p>Sagra di Penco · Leccio · dal 1975</p>
+</footer>
+
+<dialog class="prenota" id="dialogo">
+  <div class="pren-in">
+    <div class="pren-testa">
+      <div><h2 id="pren-titolo">Prenota</h2><p id="pren-sotto"></p></div>
+      <button class="chiudi" type="button" id="chiudi" aria-label="Chiudi">×</button>
+    </div>
+    <form id="form" novalidate>
+      <input type="hidden" name="id"><input type="hidden" name="evento"><input type="hidden" name="giorno">
+      <label>Nome e cognome<input name="nome" required autocomplete="name"></label>
+      <div class="due">
+        <label>Telefono<input name="telefono" type="tel" required autocomplete="tel" inputmode="tel"></label>
+        <label>Adulti<input name="adulti" type="number" min="0" max="30" value="2" required inputmode="numeric"></label>
+      </div>
+      <div class="due">
+        <label>Bambini sotto gli 11 anni<input name="bambini" type="number" min="0" max="30" value="0" required inputmode="numeric"></label>
+      </div>
+      <label>Email (per ricevere la conferma)<input name="email" type="email" required autocomplete="email" inputmode="email"></label>
+      <label>Note<textarea name="note" rows="3"></textarea></label>
+      <p class="esito" aria-live="polite" id="esito"></p>
+      <button class="bottone pieno" type="submit" id="invia">Invia prenotazione</button>
+      <p class="oppure" id="pren-oppure"></p>
+      <p class="privacy">I dati servono solo a gestire la prenotazione e vengono cancellati dopo la sagra.</p>
+    </form>
+  </div>
+</dialog>
+
+<script>
+/* ==========================================================================
+   DATI — corrispondono alla "matrice eventi" (un evento per riga).
+   Campi: id, giorno (ven/sab/dom), ora, fine, titolo, sottotitolo, luogo,
+   testo, menu ([["portata","piatto"],…]), prezzo, prezzoNota, posti, scadenza,
+   prenotazione: "form" | "telefono" | "form+telefono" | "" (libero),
+   telefono, referente, sito (false = non pubblicare).
+   ========================================================================== */
+const TELEFONO_GENERALE = "055 8657956";      // Circolo ARCI (usato se un evento non ha un numero suo)
+const FORM_ENDPOINT     = "";                 // URL della web app Apps Script (/exec)
+
+const GIORNI = [
+  { id:"ven", nome:"Venerdì 16 ottobre" },
+  { id:"sab", nome:"Sabato 17 ottobre" },
+  { id:"dom", nome:"Domenica 18 ottobre" }
+];
+
+const EVENTI = [
+  { id:"ven-cena-francese", giorno:"ven", ora:"20:00", titolo:"Cena Francese con Penco",
+    sottotitolo:"Con presentazione dei libri La Toscana ritrovata e L'oppio di Firenze Capitale",
+    luogo:"Circolo ARCI",
+    testo:"Cena a menu francese. Nel corso della serata, presentazione dei libri La Toscana ritrovata e L'oppio di Firenze Capitale con Sergio Calamandrei e Maria Dina Tozzi.",
+    menu:[["Entrée","Quiche de Penco"],["Premier plat","Soupe à l'oignon"],["Plat principal","Bœuf à la Bourguignon avec ratatouille"],["Dessert","Tartelettes aux fruits frais"],["Boissons","Vin, eau minérale, vin santo"]],
+    prezzo:20, prezzoNota:"", posti:100, scadenza:"entro il 12 ottobre",
+    prenotazione:"form+telefono", telefono:"333 1233250", referente:"Massimo e Simonetta" },
+
+  { id:"sab-penco-bambini", giorno:"sab", ora:"10:00", titolo:"Penco visto dai bambini",
+    sottotitolo:"Mostra di disegni, poesie e lavori dei bambini", luogo:"Piazza D. Manin",
+    testo:"Inaugurazione della mostra di disegni, poesie e lavori dei bambini ispirati a Penco. Evento per famiglie.",
+    prenotazione:"" },
+
+  { id:"sab-apericina", giorno:"sab", ora:"12:00", titolo:"AperiCina di Penco",
+    sottotitolo:"Aperipranzo a base di ravioli", luogo:"Bar Penco",
+    testo:"Aperipranzo a base di ravioli alla piastra e al vapore, a cura del Bar Penco.",
+    prenotazione:"telefono", telefono:"", referente:"Bar Penco", sito:false },
+
+  { id:"sab-pencolone", giorno:"sab", ora:"14:30", titolo:"Penco-lone",
+    sottotitolo:"Passeggiata da Penco a Sammezzano", luogo:"Partenza da Piazza D. Manin",
+    testo:"Passeggiata eccezionale da Penco a Sammezzano attraverso il parco, aperto per l'occasione. All'arrivo festeggiamo con bombolone e brindisi.",
+    prezzo:5, prezzoNota:"gratis sotto gli 11 anni", scadenza:"entro il 15 ottobre",
+    prenotazione:"form" },
+
+  { id:"sab-mostra-foto", giorno:"sab", ora:"18:00", titolo:"Mostra fotografica «Leccio al tempo di Penco o giù di lì»",
+    sottotitolo:"Fotografie storiche di Leccio", luogo:"Circolo ARCI, sala biliardo",
+    testo:"Apertura della mostra con fotografie di Carlo Benvenuti, Aulo Ieri, Rodolfo Bruschi e Anna Massini.",
+    prenotazione:"" },
+
+  { id:"sab-pizzeria", giorno:"sab", ora:"19:00", titolo:"Pizzeria",
+    sottotitolo:"A cura della USD Leccese", luogo:"Circolo ARCI",
+    testo:"Pizzeria al Circolo ARCI, a cura della USD Leccese. Solo su prenotazione.",
+    prenotazione:"telefono", telefono:"055 8657956", referente:"Circolo ARCI" },
+
+  { id:"dom-ciccia-asporto", giorno:"dom", ora:"12:00", titolo:"Ciccia da asporto",
+    sottotitolo:"Pranzo da asporto, anche in loco", luogo:"Circolo ARCI",
+    testo:"Pranzo da asporto su prenotazione, con possibilità di mangiare anche al Circolo.",
+    scadenza:"entro il 14 ottobre",
+    prenotazione:"telefono", telefono:"055 8657956", referente:"Circolo ARCI" },
+
+  { id:"dom-lotteria-biglietti", giorno:"dom", ora:"12:00", fine:"18:00", titolo:"Lotteria gratuita PagaPenco",
+    sottotitolo:"Distribuzione dei biglietti gratuiti", luogo:"Circolo ARCI",
+    testo:"I biglietti gratuiti della Lotteria PagaPenco si distribuiscono per tutta la durata della sagra. Estrazione alle 18:45.",
+    prenotazione:"" },
+
+  { id:"dom-street-food", giorno:"dom", ora:"15:00", titolo:"Stand gastronomici e street food",
+    sottotitolo:"Marroni, salsicce, polenta fritta, birra, vino e cocktail", luogo:"Circolo ARCI",
+    testo:"Apertura degli stand gastronomici e street food: marroni arrosto, salsicce, polenta fritta, birra, vino e cocktail.",
+    prenotazione:"" },
+
+  { id:"dom-partita-leccese", giorno:"dom", ora:"15:30", titolo:"USD Leccese – San Clemente",
+    sottotitolo:"Campionato di Seconda Categoria FIGC", luogo:"Campo sportivo di Leccio",
+    testo:"Giornata di campionato, Seconda Categoria FIGC.",
+    prenotazione:"" },
+
+  { id:"dom-tombolone", giorno:"dom", ora:"18:00", titolo:"Tombolone",
+    sottotitolo:"", luogo:"Circolo ARCI",
+    testo:"Tombolone al Circolo.",
+    prenotazione:"" },
+
+  { id:"dom-estrazione-pagapenco", giorno:"dom", ora:"18:45", titolo:"Estrazione Lotteria PagaPenco",
+    sottotitolo:"", luogo:"Circolo ARCI",
+    testo:"Estrazione della Lotteria gratuita PagaPenco.",
+    prenotazione:"" },
+
+  { id:"dom-grande-lotteria", giorno:"dom", ora:"19:00", titolo:"Estrazione della Grande Lotteria di Penco",
+    sottotitolo:"Con ricchi premi", luogo:"Circolo ARCI",
+    testo:"Estrazione della Grande Lotteria di Penco con ricchi premi.",
+    prenotazione:"" }
+];
+/* ================= FINE DATI ================= */
+
+const telHref = t => "tel:" + t.replace(/\s+/g, "");
+const esc = s => String(s ?? "").replace(/[&<>"]/g, c => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;"}[c]));
+const giornoDi = e => GIORNI.find(g => g.id === e.giorno);
+const visibili = EVENTI.filter(e => e.sito !== false);
+const conForm = e => /form/.test(e.prenotazione);
+const conTel  = e => /telefono/.test(e.prenotazione);
+const telDi   = e => e.telefono || TELEFONO_GENERALE;
+
+/* programma: un'unica lista per giorno */
+document.getElementById("giorni").innerHTML = GIORNI.map(g => `
+  <section class="giorno" id="${g.id}">
+    <h2>${esc(g.nome)}</h2>
+    ${visibili.filter(e => e.giorno === g.id).map(e => {
+      const pren = !!e.prenotazione;
+      const bottoni = [
+        conTel(e)  ? `<a class="bottone" href="${telHref(telDi(e))}">☎ Chiama</a>` : "",
+        conForm(e) ? `<button class="bottone pieno" type="button" data-prenota="${e.id}">Prenota</button>` : ""
+      ].filter(Boolean);
+      return `
+    <article class="voce">
+      <p class="ora">${esc(e.ora)}${e.fine ? `<small>fino alle ${esc(e.fine)}</small>` : ""}</p>
+      <div>
+        <h3>${esc(e.titolo)}${pren ? `<span class="tag">su prenotazione</span>` : ""}</h3>
+        <p class="dove">${esc(e.luogo)}</p>
+        ${e.sottotitolo ? `<p><em>${esc(e.sottotitolo)}</em></p>` : ""}
+        <p>${esc(e.testo)}</p>
+        ${e.menu ? `<div class="menu"><b>Menu</b>${e.menu.map(m => `<p><em>${esc(m[0])}:</em> ${esc(m[1])}</p>`).join("")}</div>` : ""}
+        ${pren ? `<div class="riga">
+          ${e.prezzo != null ? `<span><b>€ ${e.prezzo}</b>${e.prezzoNota ? " · " + esc(e.prezzoNota) : ""}</span>` : ""}
+          ${e.posti ? `<span>max <b>${e.posti}</b> posti</span>` : ""}
+          ${e.scadenza ? `<span class="scad">Prenotazioni ${esc(e.scadenza)}</span>` : ""}
+          ${conTel(e) && !conForm(e) ? `<span>${esc(e.referente || "")} <b>${esc(telDi(e))}</b></span>` : ""}
+        </div>
+        <div class="azioni ${bottoni.length === 1 ? "singola" : ""}">${bottoni.join("")}</div>` : ""}
+      </div>
+    </article>`;}).join("")}
+  </section>`).join("");
+
+/* modulo */
+const dlg = document.getElementById("dialogo"), form = document.getElementById("form"), esito = document.getElementById("esito");
+document.addEventListener("click", ev => {
+  const b = ev.target.closest("[data-prenota]"); if (!b) return;
+  const e = EVENTI.find(x => x.id === b.dataset.prenota), g = giornoDi(e);
+  form.reset(); esito.textContent = ""; esito.className = "esito";
+  form.id.value = e.id; form.evento.value = e.titolo; form.giorno.value = g.nome;
+  document.getElementById("pren-titolo").textContent = e.titolo;
+  document.getElementById("pren-sotto").textContent = `${g.nome} · ${e.ora} · ${e.luogo}${e.scadenza ? " · " + e.scadenza : ""}`;
+  document.getElementById("pren-oppure").innerHTML = conTel(e) ? `oppure chiama ${esc(e.referente || "")} <a href="${telHref(telDi(e))}">${esc(telDi(e))}</a>` : "";
+  dlg.showModal(); form.nome.focus();
+});
+document.getElementById("chiudi").onclick = () => dlg.close();
+
+form.addEventListener("submit", async ev => {
+  ev.preventDefault(); esito.className = "esito";
+  if (!form.reportValidity()) return;
+  if (!FORM_ENDPOINT) { esito.textContent = "Il modulo non è ancora attivo: prenota per telefono."; esito.classList.add("errore"); return; }
+  const invia = document.getElementById("invia"); invia.disabled = true;
+  try {
+    const dati = Object.fromEntries(new FormData(form));
+    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati) });
+    const ris = await r.json();
+    if (!r.ok || !ris.ok) throw new Error(ris.errore || "errore");
+    esito.textContent = "Prenotazione registrata: ti abbiamo mandato una mail di conferma."; esito.classList.add("ok");
+    invia.textContent = "Chiudi"; invia.type = "button";
+    invia.onclick = () => { dlg.close(); invia.textContent = "Invia prenotazione"; invia.type = "submit"; invia.onclick = null; };
+  } catch { esito.textContent = "Invio non riuscito: riprova o chiama il referente."; esito.classList.add("errore"); }
+  finally { invia.disabled = false; }
+});
+</script>
+</body>
+</html>
