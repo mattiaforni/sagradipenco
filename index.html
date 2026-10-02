@@ -68,7 +68,8 @@ img{max-width:100%;display:block}
 .voce .riga{display:flex;flex-wrap:wrap;gap:.3rem 1rem;margin:0 0 .5rem;font-size:.95rem}
 .voce .riga b{color:var(--blu)}
 .voce .riga .scad{color:var(--rosso)}
-.voce .posti{font-family:var(--condensata);font-size:.9rem;letter-spacing:.02em;color:var(--blu);margin:0 0 .7rem;min-height:0}
+.voce .posti{font-family:var(--condensata);font-size:.9rem;letter-spacing:.02em;color:var(--tenue);margin:0 0 .7rem;min-height:0}
+.voce .posti b{color:var(--blu);font-weight:500;background:rgba(32,79,122,.1);padding:0 .35em;border-radius:2px;margin-left:.15em}
 .voce .posti:empty{display:none}
 .voce .posti .pieno{color:var(--rosso)}
 .menu{margin:.2rem 0 .7rem;padding:.5rem .8rem;border:1px dashed var(--carta-bordo);font-size:.93rem}
@@ -109,6 +110,7 @@ dialog.prenota::backdrop{background:rgba(23,58,90,.55)}
 .pren-testa{display:flex;justify-content:space-between;align-items:flex-start;gap:1rem;border-bottom:2px solid var(--blu);padding-bottom:.6rem;margin-bottom:1rem}
 .pren-testa h2{font-family:var(--gotica);color:var(--rosso);font-size:2rem;line-height:1;margin:0;letter-spacing:.03em}
 .pren-testa p{margin:.2rem 0 0;font-style:italic;color:var(--tenue)}
+.pren-testa .aggiorna{font-size:.8rem;color:var(--blu);min-height:1em}
 .chiudi{background:none;border:0;font-size:2rem;line-height:1;color:var(--blu);cursor:pointer;padding:0 .2rem;font-family:var(--testo)}
 .pren-in form{display:grid;gap:.9rem}
 .pren-in label{display:flex;flex-direction:column;gap:.3rem;font-style:italic;color:var(--tenue);font-size:.95rem}
@@ -186,7 +188,7 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
 <dialog class="prenota" id="dialogo">
   <div class="pren-in">
     <div class="pren-testa">
-      <div><h2 id="pren-titolo">Prenota</h2><p id="pren-sotto"></p></div>
+      <div><h2 id="pren-titolo">Prenota</h2><p id="pren-sotto"></p><p class="aggiorna" id="pren-aggiorna"></p></div>
       <button class="chiudi" type="button" id="chiudi" aria-label="Chiudi">×</button>
     </div>
     <form id="form" novalidate>
@@ -423,9 +425,9 @@ function mostraDisponibilita() {
     }
     if (d.turni) {
       p.innerHTML = "Posti rimasti — " + Object.entries(d.turni).map(([t, x]) =>
-        x.esaurito ? `<span class="pieno">${esc(t)}: esaurito</span>` : `${esc(t)}: ${x.capienza ? tondo(x.disponibili) : "liberi"}`).join(" · ");
+        x.esaurito ? `<span class="pieno">${esc(t)} esaurito</span>` : `${esc(t)} <b>${x.capienza ? tondo(x.disponibili) : "liberi"}</b>`).join(" · ");
     } else if (d.capienza) {
-      p.innerHTML = d.esaurito ? `<span class="pieno">Posti esauriti</span>` : `Posti rimasti: ${tondo(d.disponibili)}`;
+      p.innerHTML = d.esaurito ? `<span class="pieno">Posti esauriti</span>` : `Posti rimasti <b>${tondo(d.disponibili)}</b>`;
     }
     if (btn && d.esaurito) { btn.disabled = true; btn.textContent = "Esaurito"; }
   });
@@ -448,8 +450,10 @@ function preparaTurni(e) {
   const d = DISPONIBILITA[e.id];
   if (!d || !d.turni) { labelOrario.classList.add("nascosta"); selOrario.required = false; selOrario.innerHTML = ""; return; }
   labelOrario.classList.remove("nascosta"); selOrario.required = true;
+  const scelto = selOrario.value;
   selOrario.innerHTML = `<option value="">Scegli un orario</option>` + Object.entries(d.turni).map(([t, x]) =>
     `<option value="${esc(t)}" ${x.esaurito ? "disabled" : ""}>${esc(t)}${x.esaurito ? " — esaurito" : x.capienza ? ` (${tondo(x.disponibili)} posti)` : ""}</option>`).join("");
+  if (scelto && d.turni[scelto] && !d.turni[scelto].esaurito) selOrario.value = scelto;
 }
 function ripristinaInvio() { invia.textContent = "Invia prenotazione"; invia.type = "submit"; invia.onclick = null; invia.disabled = false; }
 
@@ -464,9 +468,14 @@ document.addEventListener("click", async ev => {
   document.getElementById("pren-titolo").textContent = e.titolo;
   document.getElementById("pren-sotto").textContent = `${g.nome} · ${e.ora} · ${(LUOGHI[e.luogo] || {nome:e.luogo}).nome}${e.scadenza ? " · " + e.scadenza : ""}`;
   document.getElementById("pren-oppure").innerHTML = conTel(e) ? `oppure chiama ${esc(e.referente || "")} <a href="${telHref(telDi(e))}">${esc(telDi(e))}</a>` : "";
-  await caricaDisponibilita();   // dati freschi al momento della prenotazione
   preparaTurni(e);
   dlg.showModal(); form.nome.focus();
+  // aggiorna i posti in sottofondo, senza far aspettare chi prenota
+  const aggiornamento = document.getElementById("pren-aggiorna");
+  if (FORM_ENDPOINT) {
+    aggiornamento.textContent = "Aggiorno i posti disponibili…";
+    caricaDisponibilita().then(() => { if (form.id.value === e.id) preparaTurni(e); aggiornamento.textContent = ""; });
+  }
 });
 document.getElementById("chiudi").onclick = () => dlg.close();
 
