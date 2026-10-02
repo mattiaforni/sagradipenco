@@ -242,7 +242,9 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
    telefono, referente, persone (le due quantità chieste nel modulo: se manca
    sono ["Adulti","Bambini sotto gli 11 anni"]), sito (false = non pubblicare).
    Capienze, turni e chiusure dei form si gestiscono nel foglio "Config"
-   del file prenotazioni, non qui.
+   del file prenotazioni, non qui: quando il sito è collegato allo script,
+   "max N posti" e "Prenotazioni entro il …" vengono presi da lì e i valori
+   posti/scadenza scritti qui sotto servono solo finché il form non è attivo.
    ========================================================================== */
 const TELEFONO_GENERALE = "055 8657956";   // Circolo ARCI (usato se un evento non ha un numero suo)
 const FORM_ENDPOINT     = "";              // URL della web app Apps Script (finisce con /exec)
@@ -286,7 +288,6 @@ const EVENTI = [
 
   { id:"sab-penco-trekking", giorno:"sab", ora:"14:30", titolo:"Penco Trekking",
     sottotitolo:"Passeggiata nel Parco del Castello di Sammezzano", luogo:"Piazza Manin",
-    banner:{ src:"apertura-straordinaria.webp", alt:"Apertura straordinaria del Parco del Castello di Sammezzano" },
     testo:"Passeggiata eccezionale da Piazza Manin al Castello di Sammezzano attraverso il parco, aperto per l'occasione. All'arrivo festeggiamo con bombolone e brindisi. Adatta a famiglie e bambini.",
     prezzo:5, prezzoNota:"gratis sotto gli 11 anni", scadenza:"entro il 15 ottobre",
     prenotazione:"form" },
@@ -379,8 +380,8 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
         ${e.regolamento ? `<p><button class="link-reg" type="button" data-regolamento>Leggi il regolamento</button></p>` : ""}
         ${pren ? `<div class="riga">
           ${e.prezzo != null ? `<span><b>€ ${e.prezzo}</b>${e.prezzoNota ? " · " + esc(e.prezzoNota) : ""}</span>` : ""}
-          ${e.posti ? `<span>max <b>${e.posti}</b> posti</span>` : ""}
-          ${e.scadenza ? `<span class="scad">Prenotazioni ${esc(e.scadenza)}</span>` : ""}
+          <span data-capienza="${e.id}">${e.posti ? `max <b>${e.posti}</b> posti` : ""}</span>
+          <span class="scad" data-scadenza="${e.id}">${e.scadenza ? `Prenotazioni ${esc(e.scadenza)}` : ""}</span>
           ${conTel(e) && !conForm(e) ? `<span>${esc(e.referente || "")} <b>${esc(telDi(e))}</b></span>` : ""}
         </div>
         <p class="posti" data-posti="${e.id}"></p>
@@ -399,7 +400,19 @@ reg.addEventListener("click", ev => { if (ev.target === reg) reg.close(); });
 let DISPONIBILITA = {};
 const tondo = n => n <= 0 ? 0 : Math.ceil(n / 5) * 5;   // 4 → 5, 7 → 10: il sito mostra un numero "comodo", il limite vero è nel foglio   // { idEvento: { aperto, capienza, prenotati, disponibili, esaurito, turni:{ "12:00":{...} } } }
 
+const MESI = { january:"gennaio", february:"febbraio", march:"marzo", april:"aprile", may:"maggio", june:"giugno", july:"luglio", august:"agosto", september:"settembre", october:"ottobre", november:"novembre", december:"dicembre" };
+const mese = s => String(s).replace(/[A-Za-z]+/, m => MESI[m.toLowerCase()] || m);
+
 function mostraDisponibilita() {
+  // capienza e chiusura del form vengono dal foglio Config e prevalgono sui testi scritti qui
+  document.querySelectorAll("[data-capienza]").forEach(p => {
+    const d = DISPONIBILITA[p.dataset.capienza]; if (!d) return;
+    p.innerHTML = d.capienza ? `max <b>${d.capienza}</b> posti` : "";
+  });
+  document.querySelectorAll("[data-scadenza]").forEach(p => {
+    const d = DISPONIBILITA[p.dataset.scadenza]; if (!d) return;
+    p.textContent = d.chiusura ? `Prenotazioni entro il ${mese(d.chiusura)}` : "";
+  });
   document.querySelectorAll("[data-posti]").forEach(p => {
     const d = DISPONIBILITA[p.dataset.posti]; if (!d) return;
     const btn = document.querySelector(`[data-prenota="${p.dataset.posti}"]`);
