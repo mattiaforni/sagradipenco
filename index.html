@@ -7,7 +7,7 @@
 <meta name="description" content="52ª Sagra di Penco a Leccio (Reggello): cena francese, laboratorio di argilla, pranzo cinese, Penco Trekking nel parco di Sammezzano, pizzeria, mostre, lotterie e la partita della Leccese. Programma e prenotazioni.">
 <meta name="theme-color" content="#204f7a">
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=League+Gothic&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;0,900;1,700&family=League+Gothic&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500;600&family=Patrick+Hand&display=swap" rel="stylesheet">
 <style>
 :root{
   --carta:#f1e6c8; --carta-scura:#e3d3a9; --carta-bordo:#cdbb8d;
@@ -68,6 +68,18 @@ img{max-width:100%;display:block}
 .voce .riga{display:flex;flex-wrap:wrap;gap:.3rem 1rem;margin:0 0 .5rem;font-size:.95rem}
 .voce .riga b{color:var(--blu)}
 .voce .riga .scad{color:var(--rosso)}
+.voce .riga .tel{display:block;width:100%}
+.voce h3 .logo-inline{height:1.5em;width:auto;vertical-align:middle;margin-right:.35rem}
+/* evento "biblioteca": riquadro rosa come nel materiale del Circolo */
+.voce.biblioteca > div{background:#f1e4e4;border-radius:14px;padding:.8rem .9rem .8rem;display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;align-items:start}
+.voce.biblioteca .icona{width:84px;grid-row:1/span 3}
+.voce.biblioteca h3{font-family:'Patrick Hand','Comic Neue',var(--condensata);font-size:1.45rem;letter-spacing:.02em;line-height:1.1}
+.voce.biblioteca p{grid-column:2}
+@media (max-width:420px){.voce.biblioteca > div{grid-template-columns:1fr}.voce.biblioteca .icona{grid-row:auto;width:70px}.voce.biblioteca p{grid-column:1}}
+/* evento organizzato da altri: bordo e intestazione con il logo dell'ente */
+.voce.esterno > div{border:1px solid var(--carta-bordo);border-left:4px solid var(--blu);background:rgba(255,255,255,.35);padding:.7rem .9rem .8rem;border-radius:3px}
+.voce.esterno .ente{display:flex;align-items:center;gap:.5rem;font-family:var(--condensata);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--blu);margin:0 0 .3rem}
+.voce.esterno .ente img{height:34px;width:auto}
 .voce .posti{font-family:var(--condensata);font-size:.9rem;letter-spacing:.02em;color:var(--tenue);margin:0 0 .7rem;min-height:0}
 .voce .posti b{color:var(--blu);font-weight:500;background:rgba(32,79,122,.1);padding:0 .35em;border-radius:2px;margin-left:.15em}
 .voce .posti:empty{display:none}
@@ -241,6 +253,9 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
    con piatto vuoto fa da titolo), banner (immagine), regolamento (true =
    link al pop-up PagaPenco), prezzo, prezzoNota, posti, scadenza,
    prenotazione: "form" | "telefono" | "form+telefono" | "" (libero),
+   esterno ({ente, logo, link}: evento organizzato da altri, solo grafica),
+   telefoni ([["chi","numero"],…] se i numeri sono più d'uno), logo (piccolo
+   accanto al titolo), stile:"biblioteca" (riquadro rosa),
    telefono, referente, persone (le due quantità chieste nel modulo: se manca
    sono ["Adulti","Bambini sotto gli 11 anni"]), sito (false = non pubblicare).
    Capienze, turni e chiusure dei form si gestiscono nel foglio "Config"
@@ -261,7 +276,8 @@ const LUOGHI = {
   "Circolo ARCI":  { nome:"Circolo ARCI Aurora Leccio", maps:"https://maps.app.goo.gl/pkm7bebCVLzynRwm6" },
   "Bar Penco":     { nome:"Bar Penco", maps:"https://maps.app.goo.gl/UBLBWaUAKZVKkpRG7" },
   "Piazza Manin":  { nome:"Piazza Daniele Manin", maps:"https://maps.app.goo.gl/pNzo2bE8pVne1hPBA" },
-  "Stadio":        { nome:"Stadio «Giulio Sottani», Leccio", maps:"https://maps.app.goo.gl/VpaHTikjSGbAtkse7" }
+  "Stadio":        { nome:"Stadio «Giulio Sottani», Leccio", maps:"https://maps.app.goo.gl/VpaHTikjSGbAtkse7" },
+  "Circolo S. Ellero": { nome:"Circolo ARCI S. Ellero, via Contessa Itta 2", maps:"https://maps.app.goo.gl/kLdbXQfDb1k1hXPcA" }
 };
 
 const EVENTI = [
@@ -270,28 +286,34 @@ const EVENTI = [
     luogo:"Circolo ARCI",
     testo:"Cena con piatti francesi alla maniera dell'epoca napoleonica. Durante la serata verranno presentati i racconti di Sergio Calamandrei e Maria Dina Tozzi.",
     menu:[["Entrée","Quiche de Penco"],["Premier plat","Soupe à l'oignon"],["Plat principal","Bœuf à la Bourguignon avec ratatouille"],["Dessert","Tartelettes aux fruits frais"],["Boissons","Vin, eau minérale, vin santo"]],
-    prezzo:20, prezzoNota:"menu bambini € 10", posti:100, scadenza:"entro il 12 ottobre",
+    prezzo:20, prezzoNota:"menu bambini € 10", posti:100, scadenza:"entro mercoledì 14 ottobre",
     persone:["Adulti (€ 20)","Bambini (menu bambini € 10)"],
-    prenotazione:"form+telefono", telefono:"333 1233250", referente:"Massimo" },
+    prenotazione:"form+telefono", telefono:"349 2436853", referente:"",
+    telefoni:[["","349 2436853"],["Circolo ARCI","055 8657956"]] },
+
+  { id:"ven-biblioteca", giorno:"ven", ora:"20:00", titolo:"Apertura straordinaria della biblioteca del Circolo",
+    sottotitolo:"Prima e dopo la cena", luogo:"Circolo ARCI", stile:"biblioteca",
+    testo:"La biblioteca del Circolo apre in via straordinaria per la serata, con una selezione di libri di storia locale.",
+    prenotazione:"" },
 
   { id:"sab-penco-argilla", giorno:"sab", ora:"10:00", titolo:"Penco con l'argilla",
     sottotitolo:"Laboratorio creativo per bambini in piazza", luogo:"Piazza Manin",
     testo:"Laboratorio di argilla per bambini: ognuno modella il proprio salvadanaio o la propria saccoccia ispirati a Penco. I lavori saranno esposti al Circolo ARCI insieme alla mostra fotografica.",
     prenotazione:"" },
 
-  { id:"sab-pranzo-cinese", giorno:"sab", ora:"12:00", fine:"14:00", titolo:"Pranzo Cinese con Penco",
+  { id:"sab-pranzo-cinese", giorno:"sab", ora:"12:00", fine:"14:00", titolo:"Mezzogiorno d'Oriente",
     sottotitolo:"Involtini, ravioli e spaghettini al Bar Penco", luogo:"Bar Penco",
     testo:"Pranzo cinese al Bar Penco, dalle 12 alle 14, in quattro turni (12:00, 12:30, 13:00, 13:30). Menu completo a € 15 e menu vegetariano a € 10, un drink a scelta incluso.",
     menu:[["Menu € 15",""],["Antipasti","Involtini primavera, edamame, pane cinese"],["Primo","Ravioli maiale e cipollotto, spaghettini pollo e verdure"],["Bevande","1 drink a scelta"],
           ["Menu vegetariano € 10",""],["Antipasti","Involtini primavera, edamame, pane cinese"],["Primo","Spaghettini alle verdure"],["Bevande","1 drink a scelta"]],
-    prezzo:15, prezzoNota:"menu vegetariano € 10", posti:100,
+    prezzo:15, prezzoNota:"menu vegetariano € 10", posti:100, scadenza:"entro mercoledì 14 ottobre",
     persone:["Menu € 15","Menu vegetariano € 10"],
     prenotazione:"form", referente:"Bar Penco" },
 
   { id:"sab-penco-trekking", giorno:"sab", ora:"14:30", titolo:"Penco Trekking",
     sottotitolo:"Passeggiata nel Parco del Castello di Sammezzano", luogo:"Piazza Manin",
     testo:"Passeggiata eccezionale da Piazza Manin al Castello di Sammezzano attraverso il parco, aperto per l'occasione. All'arrivo festeggiamo con bombolone e brindisi. Adatta a famiglie e bambini.",
-    prezzo:5, prezzoNota:"gratis sotto gli 11 anni", scadenza:"entro il 15 ottobre",
+    prezzo:5, prezzoNota:"gratis sotto gli 11 anni", scadenza:"entro mercoledì 14 ottobre",
     prenotazione:"form" },
 
   { id:"sab-mostra-foto", giorno:"sab", ora:"18:00", titolo:"Mostra fotografica «Leccio al tempo di Penco o giù di lì»",
@@ -304,11 +326,18 @@ const EVENTI = [
     testo:"Pizzeria al Circolo ARCI, a cura della USD Leccese. Solo su prenotazione.",
     prenotazione:"telefono", telefono:"055 8657956", referente:"Circolo ARCI" },
 
+  { id:"dom-sellero-penco", giorno:"dom", ora:"9:00", titolo:"A piedi: da S. Ellero a Penco",
+    sottotitolo:"A cura del Circolo S. Ellero", luogo:"Circolo S. Ellero",
+    esterno:{ ente:"Circolo S. Ellero", logo:"logo-sellero.png", link:"https://circolosellero.my.canva.site/iniziative" },
+    testo:"A piedi come una volta: da S. Ellero alla Sagra di Penco. Una camminata che collega il Castello di S. Ellero e il Castello di Sammezzano. Ritrovo al Circolo ARCI di S. Ellero, arrivo al Circolo ARCI Aurora di Leccio. 10 km circa.",
+    prezzo:3, prezzoNota:"contributo", scadenza:"entro mercoledì 14 ottobre",
+    prenotazione:"form" },
+
   { id:"dom-ciccia-asporto", giorno:"dom", ora:"12:00", titolo:"Ciccia da asporto",
     sottotitolo:"Pranzo da asporto, anche in loco", luogo:"Circolo ARCI",
     testo:"Pranzo da asporto su prenotazione, con possibilità di mangiare anche al Circolo.",
     menu:[["Ciccia","Arrosto girato, rosticciana, pollo arrosto, salsicce"],["Contorni","Patate fritte e polenta fritta"]],
-    scadenza:"entro il 14 ottobre",
+    scadenza:"entro giovedì 15 ottobre",
     prenotazione:"telefono", telefono:"055 8657956", referente:"Circolo ARCI" },
 
   { id:"dom-lotteria-biglietti", giorno:"dom", ora:"12:00", fine:"18:00", titolo:"Lotteria gratuita PagaPenco",
@@ -318,11 +347,11 @@ const EVENTI = [
     prenotazione:"" },
 
   { id:"dom-street-food", giorno:"dom", ora:"15:00", titolo:"Stand gastronomici e street food",
-    sottotitolo:"Marroni, salsicce, polenta fritta, birra, vino e cocktail", luogo:"Circolo ARCI",
-    testo:"Apertura degli stand gastronomici e street food: marroni arrosto, salsicce, polenta fritta, birra, vino e cocktail.",
+    sottotitolo:"Marroni, salsicce, polenta fritta, castagnaccio, birra, vino e cocktail", luogo:"Circolo ARCI",
+    testo:"Apertura degli stand gastronomici e street food: marroni arrosto, salsicce, polenta fritta, birra, castagnaccio, vino e cocktail.",
     prenotazione:"" },
 
-  { id:"dom-partita-leccese", giorno:"dom", ora:"15:30", titolo:"USD Leccese – San Clemente",
+  { id:"dom-partita-leccese", giorno:"dom", ora:"15:30", titolo:"USD Leccese – San Clemente", logo:"logo-leccese.png",
     sottotitolo:"Campionato di Seconda Categoria FIGC", luogo:"Stadio",
     testo:"Giornata di campionato, Seconda Categoria FIGC.",
     prenotazione:"" },
@@ -369,11 +398,16 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
         conTel(e)  ? `<a class="bottone" href="${telHref(telDi(e))}">☎ Chiama</a>` : "",
         conForm(e) ? `<button class="bottone pieno" type="button" data-prenota="${e.id}">Prenota</button>` : ""
       ].filter(Boolean);
+      const telefoniHtml = e.telefoni
+        ? e.telefoni.map(t => `${t[0] ? esc(t[0]) + " " : ""}<b>${esc(t[1])}</b>`).join(" · ")
+        : (conTel(e) && !conForm(e) ? `${esc(e.referente || "")} <b>${esc(telDi(e))}</b>` : "");
       return `
-    <article class="voce" id="ev-${e.id}">
+    <article class="voce ${e.stile || ""} ${e.esterno ? "esterno" : ""}" id="ev-${e.id}">
       <p class="ora">${esc(e.ora)}${e.fine ? `<small>fino alle ${esc(e.fine)}</small>` : ""}</p>
       <div>
-        <h3>${esc(e.titolo)}${pren ? `<span class="tag">su prenotazione</span>` : ""}</h3>
+        ${e.esterno ? `<p class="ente"><img src="${esc(e.esterno.logo)}" alt="">Iniziativa del ${esc(e.esterno.ente)}${e.esterno.link ? ` · <a href="${esc(e.esterno.link)}" target="_blank" rel="noopener">le loro iniziative</a>` : ""}</p>` : ""}
+        ${e.stile === "biblioteca" ? `<img class="icona" src="icona-biblioteca.png" alt="">` : ""}
+        <h3>${e.logo ? `<img class="logo-inline" src="${esc(e.logo)}" alt="">` : ""}${esc(e.titolo)}${pren ? `<span class="tag">su prenotazione</span>` : ""}</h3>
         <p class="dove">${luogoHtml(e)}</p>
         ${e.banner ? `<img class="banner" src="${esc(e.banner.src)}" alt="${esc(e.banner.alt)}" loading="lazy">` : ""}
         ${e.sottotitolo ? `<p><em>${esc(e.sottotitolo)}</em></p>` : ""}
@@ -384,7 +418,7 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
           ${e.prezzo != null ? `<span><b>€ ${e.prezzo}</b>${e.prezzoNota ? " · " + esc(e.prezzoNota) : ""}</span>` : ""}
           <span data-capienza="${e.id}">${e.posti ? `max <b>${e.posti}</b> posti` : ""}</span>
           <span class="scad" data-scadenza="${e.id}">${e.scadenza ? `Prenotazioni ${esc(e.scadenza)}` : ""}</span>
-          ${conTel(e) && !conForm(e) ? `<span>${esc(e.referente || "")} <b>${esc(telDi(e))}</b></span>` : ""}
+          ${telefoniHtml ? `<span class="tel">${telefoniHtml}</span>` : ""}
         </div>
         <p class="posti" data-posti="${e.id}"></p>
         <div class="azioni ${bottoni.length === 1 ? "singola" : ""}">${bottoni.join("")}</div>` : ""}
@@ -467,7 +501,9 @@ document.addEventListener("click", async ev => {
   form.etichetta1.value = et1; form.etichetta2.value = et2;
   document.getElementById("pren-titolo").textContent = e.titolo;
   document.getElementById("pren-sotto").textContent = `${g.nome} · ${e.ora} · ${(LUOGHI[e.luogo] || {nome:e.luogo}).nome}${e.scadenza ? " · " + e.scadenza : ""}`;
-  document.getElementById("pren-oppure").innerHTML = conTel(e) ? `oppure chiama ${esc(e.referente || "")} <a href="${telHref(telDi(e))}">${esc(telDi(e))}</a>` : "";
+  document.getElementById("pren-oppure").innerHTML = conTel(e)
+    ? "oppure chiama " + (e.telefoni || [[e.referente || "", telDi(e)]]).map(t => `${t[0] ? esc(t[0]) + " " : ""}<a href="${telHref(t[1])}">${esc(t[1])}</a>`).join(" · ")
+    : "";
   preparaTurni(e);
   dlg.showModal(); form.nome.focus();
   // aggiorna i posti in sottofondo, senza far aspettare chi prenota
