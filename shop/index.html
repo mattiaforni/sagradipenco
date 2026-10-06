@@ -1,0 +1,375 @@
+<!DOCTYPE html>
+<html lang="it">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Shop dei volontari — Sagra di Penco</title>
+<meta name="robots" content="noindex, nofollow">
+<meta name="theme-color" content="#204f7a">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,700;1,700&family=League+Gothic&family=Libre+Bodoni:ital,wght@0,400;0,700;1,400&family=Oswald:wght@400;500&display=swap" rel="stylesheet">
+<style>
+:root{
+  --carta:#f1e6c8; --carta-scura:#e3d3a9; --carta-bordo:#cdbb8d;
+  --rosso:#c6352c; --rosso-scuro:#9e281f; --blu:#204f7a; --blu-scuro:#173a5a;
+  --inchiostro:#2a2622; --tenue:#5b544b; --bianco:#fbf6ea;
+  --titoli:'Playfair Display','Bodoni 72',Georgia,serif;
+  --gotica:'League Gothic','Oswald',Impact,sans-serif;
+  --testo:'Libre Bodoni','Bodoni 72',Georgia,serif;
+  --condensata:'Oswald','Arial Narrow',sans-serif;
+  --col:720px;
+  --safe-top:env(safe-area-inset-top,0px); --safe-bottom:env(safe-area-inset-bottom,0px);
+}
+*{box-sizing:border-box}
+html{overflow-x:clip}
+body{margin:0;overflow-x:clip;font-family:var(--testo);font-size:17px;line-height:1.5;color:var(--inchiostro);background:var(--carta);-webkit-font-smoothing:antialiased;padding-bottom:calc(84px + var(--safe-bottom))}
+a{color:var(--blu)}
+img{max-width:100%;display:block}
+button{font:inherit;color:inherit}
+.col{max-width:var(--col);margin:0 auto;padding:0 20px}
+
+.tricolore{position:fixed;top:0;left:0;right:0;z-index:30;height:calc(6px + var(--safe-top));
+  background:linear-gradient(var(--carta) 0 0) top/100% var(--safe-top) no-repeat,
+             linear-gradient(90deg,var(--blu) 0 33.3%,var(--bianco) 33.3% 66.6%,var(--rosso) 66.6%)}
+
+/* ===== testata ===== */
+.testata{padding:calc(30px + var(--safe-top)) 20px 6px;text-align:center}
+.testata .sopra{font-family:var(--titoli);font-style:italic;font-weight:700;color:var(--rosso);font-size:clamp(1.4rem,6vw,2rem);margin:0;line-height:1.1}
+.testata h1{font-family:var(--gotica);font-weight:400;color:var(--blu);font-size:clamp(2.8rem,13vw,4.4rem);letter-spacing:.03em;line-height:1;margin:.1em 0 .25em;text-transform:uppercase}
+.testata p{margin:0 auto;max-width:34em;font-size:1rem}
+.come{display:flex;flex-wrap:wrap;justify-content:center;gap:.3rem 1.2rem;margin:1rem 0 0;padding:.7rem 0;border-top:3px double var(--rosso);border-bottom:3px double var(--rosso);
+  font-family:var(--condensata);font-size:.9rem;letter-spacing:.06em;text-transform:uppercase;color:var(--rosso)}
+.come span{white-space:nowrap}
+
+/* ===== prodotti ===== */
+.prodotti{display:grid;gap:22px;margin:24px auto 0}
+.prodotto{background:var(--bianco);border:1px solid var(--carta-bordo);border-radius:6px;overflow:hidden;display:grid;grid-template-columns:minmax(0,1fr)}
+.prodotto .foto{background:#fff;aspect-ratio:1/1;border-bottom:1px solid var(--carta-bordo)}
+.prodotto .foto img{width:100%;height:100%;object-fit:contain}
+.prodotto .corpo{padding:16px 18px 18px;display:flex;flex-direction:column;gap:10px}
+.prodotto .riga-titolo{display:flex;justify-content:space-between;align-items:baseline;gap:12px}
+.prodotto h2{font-family:var(--gotica);font-weight:400;font-size:2.1rem;line-height:1;margin:0;color:var(--rosso);letter-spacing:.02em;text-transform:uppercase}
+.prezzo{font-family:var(--titoli);font-weight:700;font-size:1.5rem;color:var(--blu);white-space:nowrap}
+.prodotto p{margin:0;font-size:.97rem}
+.nota{font-style:italic;color:var(--tenue);font-size:.92rem;background:rgba(32,79,122,.07);border-radius:4px;padding:.45rem .7rem}
+fieldset{border:0;margin:0;padding:0;min-width:0}
+legend{font-family:var(--condensata);font-size:.8rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tenue);padding:0;margin:0 0 .4rem}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chips label{position:relative}
+.chips input{position:absolute;opacity:0;inset:0;margin:0;cursor:pointer}
+.chips span{display:flex;align-items:center;justify-content:center;min-height:44px;min-width:52px;padding:0 14px;border:2px solid var(--carta-bordo);border-radius:4px;background:#fff;
+  font-family:var(--condensata);font-weight:500;font-size:1rem;letter-spacing:.03em;cursor:pointer;user-select:none}
+.chips input:checked + span{border-color:var(--blu);background:var(--blu);color:var(--bianco)}
+.chips input:focus-visible + span{outline:3px solid var(--rosso);outline-offset:2px}
+.colore{display:inline-block;width:14px;height:14px;border-radius:50%;margin-right:8px;border:1px solid rgba(0,0,0,.25)}
+.azione{display:flex;gap:12px;align-items:center;flex-wrap:wrap;margin-top:4px}
+.qt{display:flex;align-items:center;border:2px solid var(--carta-bordo);border-radius:4px;background:#fff}
+.qt button{width:44px;height:44px;border:0;background:none;font-size:1.4rem;line-height:1;cursor:pointer;color:var(--blu)}
+.qt button:disabled{color:var(--carta-bordo);cursor:default}
+.qt output{min-width:2.2em;text-align:center;font-family:var(--condensata);font-size:1.15rem}
+.bottone{display:inline-flex;align-items:center;justify-content:center;gap:.4rem;min-height:48px;padding:.5rem 1.1rem;border:2px solid var(--rosso);border-radius:4px;
+  background:var(--rosso);color:var(--bianco);font-family:var(--condensata);font-weight:500;font-size:1.05rem;letter-spacing:.05em;text-transform:uppercase;cursor:pointer;text-decoration:none}
+.bottone:hover{background:var(--rosso-scuro);border-color:var(--rosso-scuro)}
+.bottone.vuoto{background:transparent;color:var(--rosso)}
+.bottone.vuoto:hover{background:rgba(198,53,44,.08)}
+.bottone:disabled{background:var(--carta-scura);border-color:var(--carta-bordo);color:var(--tenue);cursor:default}
+.bottone:focus-visible{outline:3px solid var(--blu);outline-offset:2px}
+.aggiunto{font-style:italic;color:var(--blu);font-size:.92rem;min-height:1.2em}
+.avviso-scelta{font-style:italic;color:var(--rosso);font-size:.9rem;min-height:0}
+
+@media (min-width:640px){
+  .prodotto{grid-template-columns:240px minmax(0,1fr)}
+  .prodotto .foto{border-bottom:0;border-right:1px solid var(--carta-bordo);aspect-ratio:auto;min-height:240px}
+}
+
+/* ===== barra carrello ===== */
+.barra{position:fixed;left:0;right:0;bottom:0;z-index:20;background:var(--blu);color:var(--bianco);padding:10px 16px calc(10px + var(--safe-bottom));box-shadow:0 -6px 20px rgba(23,58,90,.25)}
+.barra .col{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:0}
+.barra .riassunto{font-family:var(--condensata);letter-spacing:.04em;line-height:1.2}
+.barra .riassunto b{font-family:var(--titoli);font-size:1.35rem;letter-spacing:0;display:block}
+.barra .bottone{background:var(--bianco);border-color:var(--bianco);color:var(--blu)}
+.barra .bottone:disabled{opacity:.55;background:var(--bianco);color:var(--blu)}
+
+/* ===== carrello (schermo intero) ===== */
+dialog{border:0;padding:0;margin:0;width:100vw;max-width:100vw;height:100dvh;max-height:100dvh;background:var(--carta);color:var(--inchiostro)}
+dialog::backdrop{background:rgba(23,58,90,.55)}
+.dlg{max-width:var(--col);margin:0 auto;min-height:100%;padding:calc(18px + var(--safe-top)) 20px calc(24px + var(--safe-bottom))}
+.dlg-testa{display:flex;justify-content:space-between;align-items:center;border-bottom:2px solid var(--blu);padding-bottom:.5rem;margin-bottom:.8rem}
+.dlg-testa h2{font-family:var(--gotica);font-weight:400;color:var(--rosso);font-size:2.2rem;line-height:1;margin:0;letter-spacing:.03em}
+.chiudi{background:none;border:0;font-size:2.2rem;line-height:1;color:var(--blu);cursor:pointer;width:44px;height:44px}
+.righe{list-style:none;margin:0;padding:0}
+.righe li{display:grid;grid-template-columns:56px minmax(0,1fr) auto;gap:4px 12px;align-items:center;padding:12px 0;border-bottom:1px solid var(--carta-bordo)}
+.righe img{width:56px;height:56px;object-fit:contain;background:#fff;border:1px solid var(--carta-bordo);border-radius:4px;grid-row:span 2}
+.righe .nome{font-family:var(--condensata);font-weight:500;font-size:1.05rem;line-height:1.2}
+.righe .var{display:block;font-family:var(--testo);font-weight:400;font-style:italic;color:var(--tenue);font-size:.9rem}
+.righe .sub{font-family:var(--titoli);font-weight:700;color:var(--blu);text-align:right}
+.righe .controlli{grid-column:2 / 4;display:flex;justify-content:space-between;align-items:center}
+.togli{background:none;border:0;color:var(--rosso);text-decoration:underline;cursor:pointer;font-size:.92rem;min-height:44px}
+.totale{display:flex;justify-content:space-between;align-items:baseline;padding:14px 0 4px;font-family:var(--gotica);font-size:1.8rem;color:var(--rosso);letter-spacing:.03em}
+.totale b{font-family:var(--titoli);color:var(--blu);font-size:1.7rem;letter-spacing:0}
+.vuoto-msg{font-style:italic;color:var(--tenue);padding:1rem 0}
+.info-ritiro{font-style:italic;color:var(--tenue);margin:.2rem 0 1rem;font-size:.95rem}
+form{display:grid;gap:.85rem;margin-top:.6rem}
+form h3{font-family:var(--condensata);font-weight:500;font-size:.85rem;letter-spacing:.1em;text-transform:uppercase;color:var(--tenue);margin:.6rem 0 0;padding-top:.8rem;border-top:3px double var(--rosso)}
+form label{display:flex;flex-direction:column;gap:.3rem;font-style:italic;color:var(--tenue);font-size:.95rem}
+form input,form textarea{font:inherit;font-style:normal;font-size:17px;color:var(--inchiostro);padding:.75rem .8rem;border:1px solid var(--carta-bordo);background:var(--bianco);border-radius:4px;width:100%}
+form input:focus,form textarea:focus{outline:2px solid var(--blu);outline-offset:1px}
+.due{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
+@media (max-width:420px){.due{grid-template-columns:minmax(0,1fr)}}
+.esito{min-height:1.3em;margin:0;font-style:italic}
+.esito.ok{color:var(--blu);font-weight:700;font-style:normal}
+.esito.errore{color:var(--rosso)}
+.nascosto{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.fatto{text-align:center;padding:2rem 0}
+.fatto h3{font-family:var(--titoli);font-style:italic;color:var(--rosso);font-size:1.8rem;margin:0 0 .4rem;border:0;padding:0;text-transform:none;letter-spacing:0}
+.fatto .numero{font-family:var(--gotica);font-size:2.6rem;color:var(--blu);letter-spacing:.04em;margin:.2rem 0 .8rem}
+
+footer{text-align:center;padding:32px 20px 10px;font-size:.9rem;color:var(--tenue)}
+</style>
+</head>
+<body>
+<div class="tricolore" aria-hidden="true"></div>
+
+<header class="testata">
+  <p class="sopra">Sagra di Penco</p>
+  <h1>Shop dei volontari</h1>
+  <p>I gadget della Sagra riservati ai volontari di ViviLeccio. Scegli cosa ti serve, aggiungilo al carrello e invia l'ordine.</p>
+  <div class="come"><span>Nessun pagamento online</span><span>Paghi e ritiri allo stand</span></div>
+</header>
+
+<main class="col">
+  <div class="prodotti" id="prodotti"></div>
+</main>
+
+<footer>
+  <a href="/">sagradipenco.it</a> · Sagra di Penco · Leccio
+</footer>
+
+<div class="barra" role="region" aria-label="Carrello">
+  <div class="col">
+    <div class="riassunto" id="riassunto" aria-live="polite">Carrello vuoto<b>€ 0,00</b></div>
+    <button class="bottone" id="apri-carrello" type="button" disabled>Vedi ordine</button>
+  </div>
+</div>
+
+<dialog id="carrello" aria-labelledby="titolo-carrello">
+  <div class="dlg">
+    <div class="dlg-testa">
+      <h2 id="titolo-carrello">Il tuo ordine</h2>
+      <button class="chiudi" id="chiudi" type="button" aria-label="Chiudi">×</button>
+    </div>
+    <div id="contenuto-ordine">
+      <ul class="righe" id="righe"></ul>
+      <div class="totale"><span>Totale</span><b id="totale">€ 0,00</b></div>
+      <p class="info-ritiro">Nessun pagamento adesso: paghi e ritiri allo stand della Sagra.</p>
+      <form id="form" novalidate>
+        <h3>I tuoi dati</h3>
+        <div class="due">
+          <label>Nome<input name="nome" required autocomplete="given-name"></label>
+          <label>Cognome<input name="cognome" required autocomplete="family-name"></label>
+        </div>
+        <div class="due">
+          <label>Telefono<input name="telefono" type="tel" required autocomplete="tel" inputmode="tel"></label>
+          <label>Email (facoltativa)<input name="email" type="email" autocomplete="email"></label>
+        </div>
+        <label>Note (facoltative)<textarea name="note" rows="2"></textarea></label>
+        <label class="nascosto" aria-hidden="true">Sito<input name="sito" tabindex="-1" autocomplete="off"></label>
+        <p class="esito" id="esito" aria-live="polite"></p>
+        <button class="bottone" id="invia" type="submit">Invia ordine</button>
+      </form>
+    </div>
+    <div class="fatto" id="fatto" hidden>
+      <h3>Ordine ricevuto, grazie!</h3>
+      <p>Il numero del tuo ordine è</p>
+      <p class="numero" id="numero-ordine"></p>
+      <p>Paghi e ritiri allo stand della Sagra.</p>
+      <button class="bottone vuoto" id="chiudi-fatto" type="button">Torna allo shop</button>
+    </div>
+  </div>
+</dialog>
+
+<script>
+/* ==========================================================================
+   DATI DA MODIFICARE
+   I prezzi qui sono quelli mostrati; lo script del foglio (shop.gs) ha lo
+   stesso listino e calcola gli importi da lì: se cambi un prezzo, cambialo
+   in entrambi i posti.
+   ========================================================================== */
+const FORM_ENDPOINT = "https://script.google.com/macros/s/AKfycbzW132pSvuemIL9rUgMZkx6P9N3YJhfqblWOsgxikKz4TFQP1RGsKiN-SpdQ04msC_R/exec";
+
+const CATALOGO = [
+  { id: "maglietta", nome: "Maglietta", prezzo: 9.50, img: "img/maglietta.webp",
+    testo: "Color naturale, con Penco in panchina e il paesaggio di Leccio stampati sul davanti.",
+    scelta: { etichetta: "Taglia", obbligatoria: true,
+      opzioni: ["3–4 anni","5–6 anni","7–8 anni","9–11 anni","12–13 anni","S","M","L","XL","XXL","XXXL"] },
+    nota: "Taglie unisex: in genere le donne prendono due taglie in meno del solito." },
+  { id: "agenda", nome: "Agendina", prezzo: 3.00, img: "img/agenda-rossa.webp",
+    testo: "Copertina con Penco e la scritta «Sagra di Penco · Leccio».",
+    scelta: { etichetta: "Colore",
+      opzioni: ["Rossa","Nera","Bianca"],
+      colori: { Rossa: "#be2826", Nera: "#222124", Bianca: "#f6f4f0" },
+      immagini: { Rossa: "img/agenda-rossa.webp", Nera: "img/agenda-nera.webp", Bianca: "img/agenda-bianca.webp" } } },
+  { id: "borraccia", nome: "Borraccia termica", prezzo: 8.50, img: "img/borraccia.webp",
+    testo: "In acciaio, 500 ml, con Penco in panchina e la scritta «Sagra di Penco · Leccio»." },
+  { id: "spilla", nome: "Spilla", prezzo: 1.50, img: "img/spilla-coccarda.webp",
+    testo: "Spilla tonda da 38 mm.",
+    scelta: { etichetta: "Tipo",
+      opzioni: ["Coccarda","Penco e paesaggio"],
+      immagini: { "Coccarda": "img/spilla-coccarda.webp", "Penco e paesaggio": "img/spilla-paesaggio.webp" } } },
+  { id: "gomma", nome: "Gomma", prezzo: 2.50, img: "img/gomma.webp",
+    testo: "Con Penco in panchina e il paesaggio di Leccio." },
+  { id: "matita", nome: "Matita", prezzo: 0.80, img: "img/matita.webp",
+    testo: "Blu con gommino e la scritta «Penco – Paga e difende»." }
+];
+/* ================= FINE DATI ================= */
+
+const euro = n => "€ " + n.toFixed(2).replace(".", ",");
+const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", ">":"&gt;", '"':"&quot;" }[c]));
+const prodotto = id => CATALOGO.find(p => p.id === id);
+
+/* ---------- carrello (resta salvato sul telefono) ---------- */
+let carrello = [];
+try { carrello = JSON.parse(localStorage.getItem("shop-penco") || "[]").filter(r => prodotto(r.id) && r.qt > 0); } catch { carrello = []; }
+function salva() { try { localStorage.setItem("shop-penco", JSON.stringify(carrello)); } catch {} }
+function aggiungi(id, variante, qt) {
+  const r = carrello.find(x => x.id === id && x.variante === variante);
+  if (r) r.qt = Math.min(99, r.qt + qt); else carrello.push({ id, variante, qt });
+  salva(); aggiornaBarra();
+}
+const pezzi = () => carrello.reduce((s, r) => s + r.qt, 0);
+const totale = () => carrello.reduce((s, r) => s + r.qt * prodotto(r.id).prezzo, 0);
+
+function aggiornaBarra() {
+  const n = pezzi();
+  document.getElementById("riassunto").innerHTML = (n ? `${n} ${n === 1 ? "pezzo" : "pezzi"} nel carrello` : "Carrello vuoto") + `<b>${euro(totale())}</b>`;
+  document.getElementById("apri-carrello").disabled = !n;
+}
+
+/* ---------- schede prodotto ---------- */
+document.getElementById("prodotti").innerHTML = CATALOGO.map(p => {
+  const s = p.scelta;
+  const scelte = s ? `
+    <fieldset>
+      <legend>${esc(s.etichetta)}</legend>
+      <div class="chips">
+        ${s.opzioni.map((o, i) => `
+          <label><input type="radio" name="v-${p.id}" value="${esc(o)}" ${!s.obbligatoria && i === 0 ? "checked" : ""}>
+          <span>${s.colori ? `<i class="colore" style="background:${s.colori[o]}"></i>` : ""}${esc(o)}</span></label>`).join("")}
+      </div>
+    </fieldset>` : "";
+  return `
+  <article class="prodotto" data-id="${p.id}">
+    <div class="foto"><img src="${p.img}" alt="${esc(p.nome)} della Sagra di Penco" loading="lazy" width="800" height="800"></div>
+    <div class="corpo">
+      <div class="riga-titolo"><h2>${esc(p.nome)}</h2><span class="prezzo">${euro(p.prezzo)}</span></div>
+      <p>${esc(p.testo)}</p>
+      ${p.nota ? `<p class="nota">${esc(p.nota)}</p>` : ""}
+      ${scelte}
+      <div class="azione">
+        <div class="qt" role="group" aria-label="Quantità">
+          <button type="button" data-meno aria-label="Togli uno" disabled>−</button>
+          <output aria-live="polite">1</output>
+          <button type="button" data-piu aria-label="Aggiungi uno">+</button>
+        </div>
+        <button class="bottone" type="button" data-aggiungi>Aggiungi</button>
+      </div>
+      <p class="avviso-scelta" aria-live="polite"></p>
+      <p class="aggiunto" aria-live="polite"></p>
+    </div>
+  </article>`;
+}).join("");
+
+document.querySelectorAll(".prodotto").forEach(card => {
+  const p = prodotto(card.dataset.id), out = card.querySelector("output");
+  const meno = card.querySelector("[data-meno]"), piu = card.querySelector("[data-piu]");
+  const avviso = card.querySelector(".avviso-scelta"), conferma = card.querySelector(".aggiunto");
+  let qt = 1;
+  const mostra = () => { out.textContent = qt; meno.disabled = qt <= 1; piu.disabled = qt >= 99; };
+  meno.onclick = () => { qt = Math.max(1, qt - 1); mostra(); };
+  piu.onclick = () => { qt = Math.min(99, qt + 1); mostra(); };
+  card.addEventListener("change", ev => {
+    if (ev.target.type !== "radio") return;
+    avviso.textContent = "";
+    const imm = p.scelta.immagini && p.scelta.immagini[ev.target.value];
+    if (imm) card.querySelector(".foto img").src = imm;
+  });
+  card.querySelector("[data-aggiungi]").onclick = () => {
+    let variante = "";
+    if (p.scelta) {
+      const sel = card.querySelector(`input[name="v-${p.id}"]:checked`);
+      if (!sel) { avviso.textContent = `Scegli prima la ${p.scelta.etichetta.toLowerCase()}.`; return; }
+      variante = sel.value;
+    }
+    aggiungi(p.id, variante, qt);
+    conferma.textContent = `Aggiunt${qt === 1 ? "o" : "i"} ${qt} al carrello${variante ? ` (${variante})` : ""}.`;
+    setTimeout(() => { conferma.textContent = ""; }, 3500);
+    if (p.scelta && p.scelta.obbligatoria) card.querySelectorAll(`input[name="v-${p.id}"]`).forEach(i => i.checked = false);
+    qt = 1; mostra();
+  };
+});
+
+/* ---------- finestra ordine ---------- */
+const dlg = document.getElementById("carrello"), form = document.getElementById("form"), esito = document.getElementById("esito");
+function disegnaRighe() {
+  const ul = document.getElementById("righe");
+  if (!carrello.length) { ul.innerHTML = `<li class="vuoto-msg">Il carrello è vuoto.</li>`; }
+  else ul.innerHTML = carrello.map((r, i) => {
+    const p = prodotto(r.id), imm = (p.scelta && p.scelta.immagini && p.scelta.immagini[r.variante]) || p.img;
+    return `<li>
+      <img src="${imm}" alt="">
+      <span class="nome">${esc(p.nome)}${r.variante ? `<span class="var">${esc(p.scelta.etichetta)}: ${esc(r.variante)}</span>` : ""}</span>
+      <span class="sub">${euro(r.qt * p.prezzo)}</span>
+      <div class="controlli">
+        <div class="qt" role="group" aria-label="Quantità ${esc(p.nome)}">
+          <button type="button" data-riga="${i}" data-d="-1" aria-label="Togli uno" ${r.qt <= 1 ? "disabled" : ""}>−</button>
+          <output>${r.qt}</output>
+          <button type="button" data-riga="${i}" data-d="1" aria-label="Aggiungi uno" ${r.qt >= 99 ? "disabled" : ""}>+</button>
+        </div>
+        <button class="togli" type="button" data-togli="${i}">Rimuovi</button>
+      </div>
+    </li>`;
+  }).join("");
+  document.getElementById("totale").textContent = euro(totale());
+  document.getElementById("invia").disabled = !carrello.length;
+}
+document.getElementById("righe").addEventListener("click", ev => {
+  const b = ev.target.closest("button"); if (!b) return;
+  if (b.dataset.togli !== undefined) carrello.splice(+b.dataset.togli, 1);
+  else if (b.dataset.riga !== undefined) { const r = carrello[+b.dataset.riga]; r.qt = Math.max(1, Math.min(99, r.qt + +b.dataset.d)); }
+  salva(); disegnaRighe(); aggiornaBarra();
+});
+document.getElementById("apri-carrello").onclick = () => {
+  document.getElementById("contenuto-ordine").hidden = false; document.getElementById("fatto").hidden = true;
+  esito.textContent = ""; esito.className = "esito"; disegnaRighe(); dlg.showModal();
+};
+document.getElementById("chiudi").onclick = () => dlg.close();
+document.getElementById("chiudi-fatto").onclick = () => dlg.close();
+
+form.addEventListener("submit", async ev => {
+  ev.preventDefault(); esito.className = "esito"; esito.textContent = "";
+  if (!carrello.length) return;
+  if (!form.reportValidity()) return;
+  const invia = document.getElementById("invia");
+  invia.disabled = true; invia.textContent = "Invio in corso…";
+  try {
+    const f = Object.fromEntries(new FormData(form));
+    const dati = { azione: "ordine", ...f, righe: carrello.map(r => ({ id: r.id, variante: r.variante, qt: r.qt })), totale: totale() };
+    // Apps Script: JSON inviato come text/plain evita il preflight CORS
+    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati) });
+    const ris = await r.json();
+    if (!r.ok || !ris.ok) throw new Error(ris.errore || "errore");
+    document.getElementById("numero-ordine").textContent = ris.numero;
+    document.getElementById("contenuto-ordine").hidden = true; document.getElementById("fatto").hidden = false;
+    carrello = []; salva(); aggiornaBarra(); form.reset();
+  } catch (e) {
+    esito.textContent = "Invio non riuscito: riprova tra poco. Il carrello resta salvato.";
+    esito.classList.add("errore");
+  } finally {
+    invia.disabled = !carrello.length; invia.textContent = "Invia ordine";
+  }
+});
+
+aggiornaBarra();
+</script>
+</body>
+</html>
