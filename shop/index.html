@@ -116,6 +116,7 @@ form input,form textarea{font:inherit;font-style:normal;font-size:17px;color:var
 form input:focus,form textarea:focus{outline:2px solid var(--blu);outline-offset:1px}
 .due{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:.85rem}
 @media (max-width:420px){.due{grid-template-columns:minmax(0,1fr)}}
+.aiuto{font-size:.85rem;color:var(--tenue)}
 .esito{min-height:1.3em;margin:0;font-style:italic}
 .esito.ok{color:var(--blu);font-weight:700;font-style:normal}
 .esito.errore{color:var(--rosso)}
@@ -168,10 +169,9 @@ footer{text-align:center;padding:32px 20px 10px;font-size:.9rem;color:var(--tenu
           <label>Nome<input name="nome" required autocomplete="given-name"></label>
           <label>Cognome<input name="cognome" required autocomplete="family-name"></label>
         </div>
-        <div class="due">
-          <label>Telefono<input name="telefono" type="tel" required autocomplete="tel" inputmode="tel"></label>
-          <label>Email (facoltativa)<input name="email" type="email" autocomplete="email"></label>
-        </div>
+        <label>Telefono<input name="telefono" type="tel" required autocomplete="tel" inputmode="tel"></label>
+        <label>Email (facoltativa)<input name="email" type="email" autocomplete="email" aria-describedby="email-aiuto">
+          <small id="email-aiuto" class="aiuto">Serve solo a mandarti il riepilogo dell'ordine.</small></label>
         <label>Note (facoltative)<textarea name="note" rows="2"></textarea></label>
         <label class="nascosto" aria-hidden="true">Sito<input name="sito" tabindex="-1" autocomplete="off"></label>
         <p class="esito" id="esito" aria-live="polite"></p>
@@ -183,6 +183,7 @@ footer{text-align:center;padding:32px 20px 10px;font-size:.9rem;color:var(--tenu
       <p>Il numero del tuo ordine è</p>
       <p class="numero" id="numero-ordine"></p>
       <p>Paghi e ritiri allo stand della Sagra.</p>
+      <p class="info-ritiro" id="mail-inviata" hidden>Ti abbiamo mandato il riepilogo via email.</p>
       <button class="bottone vuoto" id="chiudi-fatto" type="button">Torna allo shop</button>
     </div>
   </div>
@@ -359,6 +360,7 @@ form.addEventListener("submit", async ev => {
     const ris = await r.json();
     if (!r.ok || !ris.ok) throw new Error(ris.errore || "errore");
     document.getElementById("numero-ordine").textContent = ris.numero;
+    document.getElementById("mail-inviata").hidden = !ris.mail;
     document.getElementById("contenuto-ordine").hidden = true; document.getElementById("fatto").hidden = false;
     carrello = []; salva(); aggiornaBarra(); form.reset();
   } catch (e) {

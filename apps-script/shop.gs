@@ -26,6 +26,7 @@
  *  - "Shop totali": pezzi da ordinare a Forme Grafiche per articolo e variante (taglia, colore, tipo).
  *    Lo riscrive lo script a ogni ordine e a ogni modifica del foglio (anche quando cancelli righe).
  *    Per forzare l'aggiornamento: esegui shopAggiornaTotali.
+ *  - Se chi ordina lascia l'email, riceve un riepilogo dell'ordine (mittente: l'account che esegue lo script).
  *  - Se cambi un prezzo, cambialo qui in SHOP_CATALOGO e nella pagina shop/index.html.
  */
 
@@ -96,9 +97,40 @@ function shopOrdine_(e) {
     } finally {
       lock.releaseLock();
     }
-    return shopRisposta_({ ok: true, numero: numero, totale: totale });
+    const mail = shopMailRiepilogo_(email, nome, numero, righe, totale);
+    return shopRisposta_({ ok: true, numero: numero, totale: totale, mail: mail });
   } catch (err) {
     return shopRisposta_({ ok: false, errore: String(err && err.message || err) });
+  }
+}
+
+/** riepilogo via email a chi ordina, solo se ha lasciato un indirizzo valido. Un errore qui non blocca l'ordine. */
+function shopMailRiepilogo_(email, nome, numero, righe, totale) {
+  if (!email || !/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return false;
+  try {
+    const h = s => String(s).replace(/[&<>"]/g, c => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" }[c]));
+    const euro = n => "€ " + n.toFixed(2).replace(".", ",");
+    const testo = righe.map(r => `${r.qt} × ${r.p.nome}${r.variante ? " (" + r.variante + ")" : ""} — ${euro(r.qt * r.p.prezzo)}`);
+    const html =
+      `<div style="font-family:Georgia,serif;color:#2a2622;max-width:520px">` +
+      `<p style="font-size:22px;color:#c6352c;font-style:italic;margin:0 0 4px">Sagra di Penco</p>` +
+      `<p style="margin:0 0 16px">Ciao ${h(nome)}, abbiamo ricevuto il tuo ordine <b>${numero}</b> dallo shop dei volontari.</p>` +
+      `<table style="border-collapse:collapse;width:100%;font-size:15px">` +
+      righe.map(r => `<tr><td style="padding:6px 0;border-bottom:1px solid #cdbb8d">${r.qt} × ${h(r.p.nome)}` +
+        `${r.variante ? ` <i style="color:#5b544b">(${h(r.variante)})</i>` : ""}</td>` +
+        `<td style="padding:6px 0;border-bottom:1px solid #cdbb8d;text-align:right">${euro(r.qt * r.p.prezzo)}</td></tr>`).join("") +
+      `<tr><td style="padding:10px 0;font-weight:bold">Totale</td><td style="padding:10px 0;text-align:right;font-weight:bold;color:#204f7a">${euro(totale)}</td></tr>` +
+      `</table><p style="margin:16px 0 0">Paghi e ritiri allo stand della Sagra.</p></div>`;
+    MailApp.sendEmail({
+      to: email, name: "Sagra di Penco", subject: "Sagra di Penco · riepilogo ordine " + numero,
+      body: `Ciao ${nome}, abbiamo ricevuto il tuo ordine ${numero} dallo shop dei volontari.\n\n` +
+            testo.join("\n") + `\n\nTotale: ${euro(totale)}\n\nPaghi e ritiri allo stand della Sagra.`,
+      htmlBody: html
+    });
+    return true;
+  } catch (err) {
+    console.error("Mail riepilogo non inviata: " + err);
+    return false;
   }
 }
 
@@ -182,7 +214,8 @@ function shopTest() {
   const props = PropertiesService.getScriptProperties();
   const prima = props.getProperty("SHOP_ULTIMO");          // la prova non consuma numeri d'ordine
   const e ={ postData: { contents: JSON.stringify({
-    azione: "ordine", nome: "Prova", cognome: "Shop", telefono: "333 0000000", email: "", note: "ordine di prova",
+    azione: "ordine", nome: "Prova", cognome: "Shop", telefono: "333 0000000",
+    email: Session.getEffectiveUser().getEmail(), note: "ordine di prova",          // il riepilogo di prova arriva a te
     righe: [ { id: "maglietta", variante: "M", qt: 2 }, { id: "agenda", variante: "Nera", qt: 1 },
              { id: "spilla", variante: "Coccarda", qt: 3 }, { id: "matita", variante: "", qt: 1 } ] }) } };
   Logger.log(shopEOrdine_(e));
