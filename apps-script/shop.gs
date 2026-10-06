@@ -13,7 +13,8 @@
  *               if (shopEOrdine_(e)) return shopOrdine_(e);
  *               ...resto invariato...
  *     Salva.
- *  4. Seleziona la funzione shopSetup ed esegui: crea i tab "Shop ordini" e "Shop totali".
+ *  4. Seleziona la funzione shopSetup ed esegui (concedi i permessi richiesti): crea i tab "Shop ordini"
+ *     e "Shop totali" e attiva l'aggiornamento automatico dei totali quando modifichi il foglio.
  *  5. Esegui shopTest: nel tab "Shop ordini" compare un ordine di prova → controlla e cancella le sue righe
  *     (la prova non consuma numeri: il primo ordine vero sarà S-001).
  *  6. Distribuisci → Gestisci distribuzioni → matita sulla distribuzione attiva → Versione: "Nuova versione" → Distribuisci.
@@ -23,7 +24,8 @@
  *  - "Shop ordini": una riga per ogni articolo ordinato. Le caselle Pagato e Consegnato servono allo stand.
  *    Per annullare un ordine cancellane le righe.
  *  - "Shop totali": pezzi da ordinare a Forme Grafiche per articolo e variante (taglia, colore, tipo).
- *    Si aggiorna da solo.
+ *    Lo riscrive lo script a ogni ordine e a ogni modifica del foglio (anche quando cancelli righe).
+ *    Per forzare l'aggiornamento: esegui shopAggiornaTotali.
  *  - Se cambi un prezzo, cambialo qui in SHOP_CATALOGO e nella pagina shop/index.html.
  */
 
@@ -89,6 +91,8 @@ function shopOrdine_(e) {
       sh.getRange(inizio, 13, valori.length, 2).insertCheckboxes();
       sh.getRange(inizio, 1, valori.length, 1).setNumberFormat("dd/MM/yyyy HH:mm");
       sh.getRange(inizio, 10, valori.length, 2).setNumberFormat("€ #,##0.00");
+      SpreadsheetApp.flush();
+      shopAggiornaTotali();
     } finally {
       lock.releaseLock();
     }
@@ -115,25 +119,62 @@ function shopTab_() {
   return sh;
 }
 
-/** crea (o ricrea) i due tab dello shop. Si può rieseguire: non tocca gli ordini già registrati. */
+/** crea i due tab dello shop e il trigger che tiene aggiornati i totali. Si può rieseguire: non tocca gli ordini. */
 function shopSetup() {
   shopTab_();
   const ss = SpreadsheetApp.getActiveSpreadsheet();
-  let tot = ss.getSheetByName(SHOP_TAB_TOTALI);
-  if (!tot) tot = ss.insertSheet(SHOP_TAB_TOTALI);
+  ScriptApp.getProjectTriggers()
+    .filter(t => t.getHandlerFunction() === "shopAggiornaTotali")
+    .forEach(t => ScriptApp.deleteTrigger(t));
+  ScriptApp.newTrigger("shopAggiornaTotali").forSpreadsheet(ss).onChange().create();
+  shopAggiornaTotali();
+}
+
+/** riscrive il tab "Shop totali" contando le righe di "Shop ordini" */
+function shopAggiornaTotali() {
+  const ss = SpreadsheetApp.getActiveSpreadsheet();
+  const sh = ss.getSheetByName(SHOP_TAB);
+  if (!sh) return;
+  const tot = ss.getSheetByName(SHOP_TAB_TOTALI) || ss.insertSheet(SHOP_TAB_TOTALI);
+
+  // ordine di presentazione: articoli e varianti nell'ordine del listino
+  const pos = {};
+  Object.keys(SHOP_CATALOGO).forEach((id, i) => {
+    const p = SHOP_CATALOGO[id];
+    p.varianti.forEach((v, j) => { pos[p.nome + "|" + v] = (i + 1) * 100 + j; });
+  });
+
+  const n = sh.getLastRow() - 1;
+  const dati = n > 0 ? sh.getRange(2, 1, n, SHOP_COLONNE.length).getValues() : [];
+  const gruppi = {}, ordini = {};
+  dati.forEach(r => {
+    const articolo = String(r[6] || "").trim(); if (!articolo) return;
+    const variante = String(r[7] || "").trim(), k = articolo + "|" + variante;
+    if (!gruppi[k]) gruppi[k] = { articolo: articolo, variante: variante, pezzi: 0, importo: 0, pos: pos[k] || 9999 };
+    gruppi[k].pezzi += Number(r[8]) || 0;
+    gruppi[k].importo += Number(r[10]) || 0;
+    if (r[1]) ordini[r[1]] = true;
+  });
+  const righe = Object.keys(gruppi).map(k => gruppi[k]).sort((a, b) => a.pos - b.pos);
+
   tot.clear();
-  tot.getRange("B1").setValue("Pezzi da ordinare a Forme Grafiche").setFontWeight("bold").setFontSize(12);
-  tot.getRange("F1").setValue("Totale ordini").setFontWeight("bold");
-  tot.getRange("G1").setFormula("=SUM('" + SHOP_TAB + "'!K2:K)").setNumberFormat("€ #,##0.00").setFontWeight("bold");
-  tot.getRange("A3").setFormula(
-    "=QUERY('" + SHOP_TAB + "'!A2:O," +
-    "\"select O, G, H, sum(I), sum(K) where G is not null group by O, G, H order by O " +
-    "label O '', G 'Articolo', H 'Variante', sum(I) 'Pezzi', sum(K) 'Importo'\", 0)");
-  tot.getRange("E4:E200").setNumberFormat("€ #,##0.00");
-  tot.getRange("A3:E3").setFontWeight("bold").setBackground("#f1e6c8");
-  tot.hideColumns(1);
-  tot.setColumnWidth(2, 160); tot.setColumnWidth(3, 160);
-  tot.setFrozenRows(3);
+  tot.getRange("A1").setValue("Pezzi da ordinare a Forme Grafiche").setFontWeight("bold").setFontSize(12);
+  tot.getRange("A2").setValue("Aggiornato il " + Utilities.formatDate(new Date(), SHOP_FUSO, "dd/MM/yyyy HH:mm") +
+                              " · ordini: " + Object.keys(ordini).length).setFontStyle("italic");
+  tot.getRange(4, 1, 1, 4).setValues([["Articolo", "Variante", "Pezzi", "Importo"]])
+     .setFontWeight("bold").setBackground("#f1e6c8");
+  if (righe.length) {
+    tot.getRange(5, 1, righe.length, 4).setValues(righe.map(g => [g.articolo, g.variante, g.pezzi, g.importo]));
+    const fine = 5 + righe.length;
+    tot.getRange(fine, 1, 1, 4).setValues([["Totale", "",
+      righe.reduce((s, g) => s + g.pezzi, 0), righe.reduce((s, g) => s + g.importo, 0)]])
+      .setFontWeight("bold").setBorder(true, null, null, null, null, null);
+    tot.getRange(5, 4, righe.length + 1, 1).setNumberFormat("€ #,##0.00");
+  } else {
+    tot.getRange("A5").setValue("Nessun ordine.").setFontStyle("italic");
+  }
+  tot.setColumnWidth(1, 170); tot.setColumnWidth(2, 160);
+  tot.setFrozenRows(4);
 }
 
 /** ordine di prova: dopo averlo controllato, cancellane le righe nel tab "Shop ordini" */
