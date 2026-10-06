@@ -71,11 +71,11 @@ img{max-width:100%;display:block}
 .voce .riga .tel{display:block;width:100%}
 .voce .ora .logo-ora{height:2.2rem;width:auto;margin:.35rem 0 0 auto}
 /* evento "biblioteca": riquadro rosa come nel materiale del Circolo */
-.voce.biblioteca > div{background:#f1e4e4;border-radius:14px;padding:.8rem .9rem .8rem;display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;align-items:start}
-.voce.biblioteca .icona{width:84px;grid-row:1/span 3}
+.voce.biblioteca > div{background:#f1e4e4;border-radius:14px;padding:.8rem .9rem .8rem;display:grid;grid-template-columns:84px minmax(0,1fr);gap:.2rem .9rem;align-items:start}
+.voce.biblioteca .icona{width:84px;grid-column:1;grid-row:1/span 4}
+.voce.biblioteca > div > h3,.voce.biblioteca > div > p{grid-column:2}
 .voce.biblioteca h3{font-family:'Patrick Hand','Comic Neue',var(--condensata);font-size:1.45rem;letter-spacing:.02em;line-height:1.1}
-.voce.biblioteca p{grid-column:2}
-@media (max-width:420px){.voce.biblioteca > div{grid-template-columns:1fr}.voce.biblioteca .icona{grid-row:auto;width:70px}.voce.biblioteca p{grid-column:1}}
+@media (max-width:420px){.voce.biblioteca > div{grid-template-columns:1fr}.voce.biblioteca .icona{grid-row:auto;width:70px}.voce.biblioteca > div > h3,.voce.biblioteca > div > p{grid-column:1}}
 /* evento organizzato da altri: riga con il logo dell'ente in fondo alla scheda */
 .voce .ente{display:flex;align-items:center;gap:.5rem;font-style:italic;color:var(--tenue);font-size:.9rem;margin:.6rem 0 0}
 .voce .ente img{height:30px;width:auto}
