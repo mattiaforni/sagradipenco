@@ -57,7 +57,7 @@ function shopOrdine_(e) {
     if (d.sito) return shopRisposta_({ ok: true, numero: "—" });          // campo trappola anti-spam
     const t = s => String(s || "").trim().slice(0, 200);
     const nome = t(d.nome), cognome = t(d.cognome), telefono = t(d.telefono), email = t(d.email), note = t(d.note);
-    if (!nome || !cognome || !telefono) throw new Error("Mancano nome, cognome o telefono");
+    if (!nome || !cognome) throw new Error("Mancano nome o cognome");
     if (!Array.isArray(d.righe) || !d.righe.length) throw new Error("Carrello vuoto");
 
     const ordineArticoli = Object.keys(SHOP_CATALOGO);
@@ -84,7 +84,7 @@ function shopOrdine_(e) {
       const ora = new Date();
       const valori = righe.map(r => {
         totale += r.qt * r.p.prezzo;
-        return [ora, numero, nome, cognome, "'" + telefono, email, r.p.nome, r.variante,
+        return [ora, numero, nome, cognome, telefono ? "'" + telefono : "", email, r.p.nome, r.variante,
                 r.qt, r.p.prezzo, r.qt * r.p.prezzo, note, false, false, r.chiave];
       });
       const inizio = sh.getLastRow() + 1;
