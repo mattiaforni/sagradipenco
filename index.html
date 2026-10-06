@@ -69,17 +69,17 @@ img{max-width:100%;display:block}
 .voce .riga b{color:var(--blu)}
 .voce .riga .scad{color:var(--rosso)}
 .voce .riga .tel{display:block;width:100%}
-.voce h3 .logo-inline{height:1.5em;width:auto;vertical-align:middle;margin-right:.35rem}
+.voce .ora .logo-ora{height:2.2rem;width:auto;margin:.35rem 0 0 auto}
 /* evento "biblioteca": riquadro rosa come nel materiale del Circolo */
 .voce.biblioteca > div{background:#f1e4e4;border-radius:14px;padding:.8rem .9rem .8rem;display:grid;grid-template-columns:auto 1fr;gap:.2rem .8rem;align-items:start}
 .voce.biblioteca .icona{width:84px;grid-row:1/span 3}
 .voce.biblioteca h3{font-family:'Patrick Hand','Comic Neue',var(--condensata);font-size:1.45rem;letter-spacing:.02em;line-height:1.1}
 .voce.biblioteca p{grid-column:2}
 @media (max-width:420px){.voce.biblioteca > div{grid-template-columns:1fr}.voce.biblioteca .icona{grid-row:auto;width:70px}.voce.biblioteca p{grid-column:1}}
-/* evento organizzato da altri: bordo e intestazione con il logo dell'ente */
-.voce.esterno > div{border:1px solid var(--carta-bordo);border-left:4px solid var(--blu);background:rgba(255,255,255,.35);padding:.7rem .9rem .8rem;border-radius:3px}
-.voce.esterno .ente{display:flex;align-items:center;gap:.5rem;font-family:var(--condensata);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--blu);margin:0 0 .3rem}
-.voce.esterno .ente img{height:34px;width:auto}
+/* evento organizzato da altri: riga con il logo dell'ente in fondo alla scheda */
+.voce .ente{display:flex;align-items:center;gap:.5rem;font-style:italic;color:var(--tenue);font-size:.9rem;margin:.6rem 0 0}
+.voce .ente img{height:30px;width:auto}
+.voce .ente a{font-style:normal;font-size:.85rem}
 .voce .posti{font-family:var(--condensata);font-size:.9rem;letter-spacing:.02em;color:var(--tenue);margin:0 0 .7rem;min-height:0}
 .voce .posti b{color:var(--blu);font-weight:500;background:rgba(32,79,122,.1);padding:0 .35em;border-radius:2px;margin-left:.15em}
 .voce .posti:empty{display:none}
@@ -253,7 +253,7 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
    con piatto vuoto fa da titolo), banner (immagine), regolamento (true =
    link al pop-up PagaPenco), prezzo, prezzoNota, posti, scadenza,
    prenotazione: "form" | "telefono" | "form+telefono" | "" (libero),
-   esterno ({ente, logo, link}: evento organizzato da altri, solo grafica),
+   esterno ({ente, logo, link}: riga "Iniziativa del [logo]" in fondo alla scheda),
    telefoni ([["chi","numero"],…] se i numeri sono più d'uno), logo (piccolo
    accanto al titolo), stile:"biblioteca" (riquadro rosa),
    telefono, referente, persone (le due quantità chieste nel modulo: se manca
@@ -402,12 +402,11 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
         ? e.telefoni.map(t => `${t[0] ? esc(t[0]) + " " : ""}<b>${esc(t[1])}</b>`).join(" · ")
         : (conTel(e) && !conForm(e) ? `${esc(e.referente || "")} <b>${esc(telDi(e))}</b>` : "");
       return `
-    <article class="voce ${e.stile || ""} ${e.esterno ? "esterno" : ""}" id="ev-${e.id}">
-      <p class="ora">${esc(e.ora)}${e.fine ? `<small>fino alle ${esc(e.fine)}</small>` : ""}</p>
+    <article class="voce ${e.stile || ""}" id="ev-${e.id}">
+      <p class="ora">${esc(e.ora)}${e.fine ? `<small>fino alle ${esc(e.fine)}</small>` : ""}${e.logo ? `<img class="logo-ora" src="${esc(e.logo)}" alt="">` : ""}</p>
       <div>
-        ${e.esterno ? `<p class="ente"><img src="${esc(e.esterno.logo)}" alt="">Iniziativa del ${esc(e.esterno.ente)}${e.esterno.link ? ` · <a href="${esc(e.esterno.link)}" target="_blank" rel="noopener">le loro iniziative</a>` : ""}</p>` : ""}
         ${e.stile === "biblioteca" ? `<img class="icona" src="icona-biblioteca.png" alt="">` : ""}
-        <h3>${e.logo ? `<img class="logo-inline" src="${esc(e.logo)}" alt="">` : ""}${esc(e.titolo)}${pren ? `<span class="tag">su prenotazione</span>` : ""}</h3>
+        <h3>${esc(e.titolo)}${pren ? `<span class="tag">su prenotazione</span>` : ""}</h3>
         <p class="dove">${luogoHtml(e)}</p>
         ${e.banner ? `<img class="banner" src="${esc(e.banner.src)}" alt="${esc(e.banner.alt)}" loading="lazy">` : ""}
         ${e.sottotitolo ? `<p><em>${esc(e.sottotitolo)}</em></p>` : ""}
@@ -422,6 +421,7 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
         </div>
         <p class="posti" data-posti="${e.id}"></p>
         <div class="azioni ${bottoni.length === 1 ? "singola" : ""}">${bottoni.join("")}</div>` : ""}
+        ${e.esterno ? `<p class="ente">Iniziativa del <img src="${esc(e.esterno.logo)}" alt="${esc(e.esterno.ente)}">${e.esterno.link ? `<a href="${esc(e.esterno.link)}" target="_blank" rel="noopener">le loro iniziative</a>` : ""}</p>` : ""}
       </div>
     </article>`;}).join("")}
   </section>`).join("");
