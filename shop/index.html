@@ -74,6 +74,10 @@ legend{font-family:var(--condensata);font-size:.8rem;letter-spacing:.1em;text-tr
 .bottone.vuoto:hover{background:rgba(198,53,44,.08)}
 .bottone:disabled{background:var(--carta-scura);border-color:var(--carta-bordo);color:var(--tenue);cursor:default}
 .bottone:focus-visible{outline:3px solid var(--blu);outline-offset:2px}
+.ruota{width:20px;height:20px;border:3px solid rgba(91,84,75,.3);border-top-color:var(--rosso);border-radius:50%;animation:gira .8s linear infinite;flex:none}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ruota{animation-duration:2.4s}}
+.attesa{font-style:italic;color:var(--tenue);font-size:.92rem;margin:0}
 .aggiunto{font-style:italic;color:var(--blu);font-size:.92rem;min-height:1.2em}
 .avviso-scelta{font-style:italic;color:var(--rosso);font-size:.9rem;min-height:0}
 
@@ -351,7 +355,9 @@ form.addEventListener("submit", async ev => {
   if (!carrello.length) return;
   if (!form.reportValidity()) return;
   const invia = document.getElementById("invia");
-  invia.disabled = true; invia.textContent = "Invio in corso…";
+  invia.disabled = true; invia.innerHTML = `<span class="ruota" aria-hidden="true"></span>Invio in corso…`;
+  form.setAttribute("aria-busy", "true");
+  esito.className = "esito attesa"; esito.textContent = "Ci vuole qualche secondo, non chiudere la pagina.";
   try {
     const f = Object.fromEntries(new FormData(form));
     const dati = { azione: "ordine", ...f, righe: carrello.map(r => ({ id: r.id, variante: r.variante, qt: r.qt })), totale: totale() };
@@ -364,10 +370,12 @@ form.addEventListener("submit", async ev => {
     document.getElementById("contenuto-ordine").hidden = true; document.getElementById("fatto").hidden = false;
     carrello = []; salva(); aggiornaBarra(); form.reset();
   } catch (e) {
+    esito.className = "esito";
     esito.textContent = "Invio non riuscito: riprova tra poco. Il carrello resta salvato.";
     esito.classList.add("errore");
   } finally {
     invia.disabled = !carrello.length; invia.textContent = "Invia ordine";
+    form.removeAttribute("aria-busy");
   }
 });
 
