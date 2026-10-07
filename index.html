@@ -226,7 +226,7 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
     </div>
     <form id="form" novalidate>
       <input type="hidden" name="id"><input type="hidden" name="evento"><input type="hidden" name="giorno">
-      <input type="hidden" name="etichetta1"><input type="hidden" name="etichetta2">
+      <input type="hidden" name="etichetta1"><input type="hidden" name="etichetta2"><input type="hidden" name="rid">
       <label>Nome e cognome<input name="nome" required autocomplete="name"></label>
       <div class="due">
         <label>Telefono<input name="telefono" type="tel" required autocomplete="tel" inputmode="tel"></label>
@@ -523,6 +523,17 @@ function preparaTurni(e) {
   if (scelto && d.turni[scelto] && !d.turni[scelto].esaurito) selOrario.value = scelto;
 }
 const pannello = document.querySelector(".pren-in");
+async function verificaRegistrata(rid) {
+  for (let i = 0; i < 4; i++) {
+    await new Promise(r => setTimeout(r, i ? 1500 : 600));
+    try {
+      const r = await fetch(`${FORM_ENDPOINT}?azione=esito&rid=${encodeURIComponent(rid)}`, { cache: "no-store" });
+      const x = await r.json();
+      if (x.registrata) return true;
+    } catch {}
+  }
+  return false;
+}
 function mostraStato(s) { pannello.dataset.stato = s; dlg.scrollTop = 0; pannello.scrollTop = 0; }
 function ripristinaInvio() { invia.disabled = false; mostraStato("form"); }
 // durante l'invio il modulo non si chiude (Esc compreso): la prenotazione potrebbe essere già partita
@@ -534,6 +545,7 @@ document.addEventListener("click", async ev => {
   const e = EVENTI.find(x => x.id === b.dataset.prenota), g = giornoDi(e);
   form.reset(); esito.textContent = ""; esito.className = "esito"; ripristinaInvio();
   form.id.value = e.id; form.evento.value = e.titolo; form.giorno.value = g.nome;
+  form.rid.value = Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
   const [et1, et2] = e.persone || ["Adulti", "Bambini sotto gli 11 anni"];
   document.getElementById("etichetta1").textContent = et1; document.getElementById("etichetta2").textContent = et2;
   form.etichetta1.value = et1; form.etichetta2.value = et2;
@@ -567,12 +579,17 @@ form.addEventListener("submit", async ev => {
     const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati) });
     ris = await r.json();
     ok = r.ok && ris.ok;
-  } catch { ris = null; }
+  } catch {
+    // la risposta non è arrivata (succede con alcuni browser): chiediamo allo script se la prenotazione è stata registrata
+    ris = null;
+    ok = await verificaRegistrata(dati.rid);
+  }
   await attesaMinima;
 
   if (!ok) {
     mostraStato("form");
-    esito.textContent = (ris && ris.errore) || "Invio non riuscito: riprova o chiama il referente.";
+    esito.textContent = (ris && ris.errore) ||
+      "Non riusciamo a confermare l'invio. Se tra qualche minuto non ti arriva la mail di conferma, riprova (non si creano doppioni) o chiama il numero indicato.";
     esito.classList.add("errore");
     if (ris && ris.esaurito) { await caricaDisponibilita(); preparaTurni(EVENTI.find(x => x.id === form.id.value)); }
     invia.disabled = false;
@@ -593,7 +610,9 @@ form.addEventListener("submit", async ev => {
   ];
   if (dati.note) righe.push(["Note", esc(dati.note)]);
   document.getElementById("ok-riepilogo").innerHTML = righe.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
-  document.getElementById("ok-mail").innerHTML = `Ti abbiamo mandato una mail di conferma a <b>${esc(dati.email)}</b>.`;
+  document.getElementById("ok-mail").innerHTML = (ris && ris.mail === false)
+    ? `La prenotazione è registrata, ma la mail di conferma a <b>${esc(dati.email)}</b> non è partita: conserva questa schermata.`
+    : `Ti abbiamo mandato una mail di conferma a <b>${esc(dati.email)}</b>.`;
   mostraStato("ok");
   document.getElementById("ok-chiudi").focus();
   invia.disabled = false;
