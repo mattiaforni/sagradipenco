@@ -134,6 +134,27 @@ dialog.prenota::backdrop{background:rgba(23,58,90,.55)}
 .esito.errore{color:var(--rosso)}
 .pren-in .oppure{text-align:center;font-style:italic;color:var(--tenue);font-size:.95rem;margin:.4rem 0 0}
 .pren-in .privacy{font-size:.8rem;color:var(--tenue);margin:0}
+/* tre stati del modulo: compilazione → invio in corso → confermata */
+.stato{display:none;flex:1;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:2rem 0 3rem}
+.pren-in[data-stato="invio"] #form,.pren-in[data-stato="ok"] #form{display:none}
+.pren-in[data-stato="invio"] #stato-invio,.pren-in[data-stato="ok"] #stato-ok{display:flex}
+.pren-in[data-stato="invio"] #chiudi{visibility:hidden}
+.ruota{width:64px;height:64px;border-radius:50%;border:6px solid var(--carta-scura);border-top-color:var(--rosso);border-right-color:var(--blu);animation:gira .9s linear infinite;margin:0 0 1.2rem}
+@keyframes gira{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.ruota{animation-duration:2.4s}}
+.stato .grande{font-family:var(--gotica);color:var(--rosso);font-size:2.2rem;line-height:1;letter-spacing:.03em;margin:0 0 .4rem}
+.stato .piccolo{font-style:italic;color:var(--tenue);margin:0;max-width:34ch}
+.spunta{position:relative;width:76px;height:76px;border-radius:50%;margin:0 0 1.1rem;
+  background:radial-gradient(circle,var(--blu) 0 46%,var(--bianco) 47% 66%,var(--rosso) 67% 100%);animation:compare .35s ease-out}
+.spunta::after{content:"";position:absolute;left:28px;top:20px;width:14px;height:26px;border:solid var(--bianco);border-width:0 5px 5px 0;transform:rotate(45deg)}
+@keyframes compare{from{transform:scale(.6);opacity:0}to{transform:scale(1);opacity:1}}
+@media (prefers-reduced-motion:reduce){.spunta{animation:none}}
+.riepilogo{width:100%;max-width:420px;margin:1.2rem auto 1rem;padding:.8rem 1rem;border:1px solid var(--carta-bordo);background:var(--bianco);text-align:left;font-size:.95rem}
+.riepilogo div{display:grid;grid-template-columns:6.5rem 1fr;gap:.6rem;padding:.25rem 0;border-bottom:1px dotted var(--carta-bordo)}
+.riepilogo div:last-child{border-bottom:0}
+.riepilogo dt{font-family:var(--condensata);font-size:.8rem;letter-spacing:.05em;text-transform:uppercase;color:var(--tenue);padding-top:.15rem}
+.riepilogo dd{margin:0}
+#stato-ok .bottone{min-width:220px}
 label.nascosta{display:none}
 
 /* ===================== REGOLAMENTO (pop-up) ===================== */
@@ -222,6 +243,18 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
       <p class="oppure" id="pren-oppure"></p>
       <p class="privacy">I dati servono solo a gestire la prenotazione e vengono cancellati dopo la sagra.</p>
     </form>
+    <div class="stato" id="stato-invio" role="status" aria-live="polite">
+      <div class="ruota" aria-hidden="true"></div>
+      <p class="grande">Invio in corso…</p>
+      <p class="piccolo">Stiamo registrando la prenotazione, ci vuole qualche secondo.</p>
+    </div>
+    <div class="stato" id="stato-ok" role="status" aria-live="polite">
+      <div class="spunta" aria-hidden="true"></div>
+      <p class="grande">Prenotazione confermata</p>
+      <p class="piccolo" id="ok-mail"></p>
+      <dl class="riepilogo" id="ok-riepilogo"></dl>
+      <button class="bottone pieno" type="button" id="ok-chiudi">Chiudi</button>
+    </div>
   </div>
 </dialog>
 
@@ -489,7 +522,12 @@ function preparaTurni(e) {
     `<option value="${esc(t)}" ${x.esaurito ? "disabled" : ""}>${esc(t)}${x.esaurito ? " — esaurito" : x.capienza ? ` (${tondo(x.disponibili)} posti)` : ""}</option>`).join("");
   if (scelto && d.turni[scelto] && !d.turni[scelto].esaurito) selOrario.value = scelto;
 }
-function ripristinaInvio() { invia.textContent = "Invia prenotazione"; invia.type = "submit"; invia.onclick = null; invia.disabled = false; }
+const pannello = document.querySelector(".pren-in");
+function mostraStato(s) { pannello.dataset.stato = s; dlg.scrollTop = 0; pannello.scrollTop = 0; }
+function ripristinaInvio() { invia.disabled = false; mostraStato("form"); }
+// durante l'invio il modulo non si chiude (Esc compreso): la prenotazione potrebbe essere già partita
+dlg.addEventListener("cancel", ev => { if (pannello.dataset.stato === "invio") ev.preventDefault(); });
+document.getElementById("ok-chiudi").onclick = () => dlg.close();
 
 document.addEventListener("click", async ev => {
   const b = ev.target.closest("[data-prenota]"); if (!b || b.disabled) return;
@@ -521,20 +559,45 @@ form.addEventListener("submit", async ev => {
   if ((+form.q1.value || 0) + (+form.q2.value || 0) < 1) { esito.textContent = "Indica almeno una persona."; esito.classList.add("errore"); return; }
   if (!FORM_ENDPOINT) { esito.textContent = "Il modulo non è ancora attivo: prenota per telefono."; esito.classList.add("errore"); return; }
   invia.disabled = true;
+  const dati = Object.fromEntries(new FormData(form));
+  mostraStato("invio");
+  const attesaMinima = new Promise(r => setTimeout(r, 700));   // la rotellina non deve solo lampeggiare
+  let ris = null, ok = false;
   try {
-    const dati = Object.fromEntries(new FormData(form));
     const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati) });
-    const ris = await r.json();
-    if (!r.ok || !ris.ok) {
-      esito.textContent = ris.errore || "Invio non riuscito: riprova o chiama il referente."; esito.classList.add("errore");
-      if (ris.esaurito) { await caricaDisponibilita(); preparaTurni(EVENTI.find(x => x.id === form.id.value)); }
-      invia.disabled = false; return;
-    }
-    esito.textContent = "Prenotazione registrata: ti abbiamo mandato una mail di conferma."; esito.classList.add("ok");
-    invia.textContent = "Chiudi"; invia.type = "button"; invia.disabled = false;
-    invia.onclick = () => { dlg.close(); ripristinaInvio(); };
-    caricaDisponibilita();
-  } catch { esito.textContent = "Invio non riuscito: riprova o chiama il referente."; esito.classList.add("errore"); invia.disabled = false; }
+    ris = await r.json();
+    ok = r.ok && ris.ok;
+  } catch { ris = null; }
+  await attesaMinima;
+
+  if (!ok) {
+    mostraStato("form");
+    esito.textContent = (ris && ris.errore) || "Invio non riuscito: riprova o chiama il referente.";
+    esito.classList.add("errore");
+    if (ris && ris.esaurito) { await caricaDisponibilita(); preparaTurni(EVENTI.find(x => x.id === form.id.value)); }
+    invia.disabled = false;
+    esito.scrollIntoView({ block: "center" });
+    return;
+  }
+
+  // schermata di conferma con il riepilogo
+  const e = EVENTI.find(x => x.id === dati.id);
+  const persone = [[+dati.q1 || 0, dati.etichetta1], [+dati.q2 || 0, dati.etichetta2]]
+    .filter(([n]) => n > 0).map(([n, et]) => `${n} × ${esc(et)}`).join("<br>");
+  const righe = [
+    ["Evento", esc(dati.evento)],
+    ["Quando", `${esc(dati.giorno)}, ore ${esc(dati.orario || e.ora)}`],
+    ["Dove", esc((LUOGHI[e.luogo] || { nome: e.luogo }).nome)],
+    ["Nome", esc(dati.nome)],
+    ["Persone", persone]
+  ];
+  if (dati.note) righe.push(["Note", esc(dati.note)]);
+  document.getElementById("ok-riepilogo").innerHTML = righe.map(([k, v]) => `<div><dt>${k}</dt><dd>${v}</dd></div>`).join("");
+  document.getElementById("ok-mail").innerHTML = `Ti abbiamo mandato una mail di conferma a <b>${esc(dati.email)}</b>.`;
+  mostraStato("ok");
+  document.getElementById("ok-chiudi").focus();
+  invia.disabled = false;
+  caricaDisponibilita();
 });
 </script>
 </body>
