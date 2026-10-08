@@ -361,18 +361,33 @@ function mostra(parte) {
 }
 // durante l'invio la finestra non si chiude (Esc compreso): l'ordine potrebbe essere già partito
 dlg.addEventListener("cancel", ev => { if (!document.getElementById("in-invio").hidden) ev.preventDefault(); });
+// Apps Script, dopo qualche minuto di inattività, impiega 15–30 secondi a rispondere alla prima richiesta.
+// Lo "svegliamo" all'apertura della pagina e del carrello, così quando si invia l'ordine è già pronto.
+const sveglia = () => { if (FORM_ENDPOINT) fetch(FORM_ENDPOINT + "?azione=ping&t=" + Date.now(), { cache: "no-store" }).catch(() => {}); };
+sveglia();
 document.getElementById("apri-carrello").onclick = () => {
+  sveglia();
   mostra("contenuto-ordine");
   esito.textContent = ""; esito.className = "esito"; disegnaRighe(); dlg.showModal();
 };
-// se la risposta non arriva, chiede allo script se l'ordine con questo codice è stato registrato
-async function cercaOrdine(rid) {
-  for (let i = 0; i < 8; i++) {
-    await new Promise(r => setTimeout(r, i ? 2500 : 800));
+// Invio ad Apps Script. Dopo un POST Google rimanda il browser a un secondo indirizzo da cui leggere la
+// risposta, e in alcuni browser quel rimando resta appeso. Quindi: si invia SENZA seguire il rimando (torna
+// appena lo script ha finito) e poi si legge l'esito, conservato dallo script sotto il codice dell'invio.
+async function inviaScript(dati) {
+  let finito = false;
+  try {
+    const ctrl = new AbortController(), limite = setTimeout(() => ctrl.abort(), 45000);   // un avvio a freddo di Apps Script può durare 30 s
+    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati), redirect: "manual", signal: ctrl.signal });
+    clearTimeout(limite);
+    finito = true;
+    if (r.type !== "opaqueredirect") { try { return await r.json(); } catch {} }
+  } catch {}
+  for (let i = 0; i < (finito ? 6 : 10); i++) {
+    if (i) await new Promise(r => setTimeout(r, 1500));
     try {
-      const r = await fetch(`${FORM_ENDPOINT}?azione=esito&rid=${encodeURIComponent(rid)}`, { cache: "no-store" });
-      const x = await r.json();
-      if (x.registrata) return x.numero || "—";
+      const x = await fetch(`${FORM_ENDPOINT}?azione=esito&rid=${encodeURIComponent(dati.rid)}`, { cache: "no-store" }).then(r => r.json());
+      if (x.risposta) return x.risposta;
+      if (x.registrata) return { ok: true, numero: x.numero || "—", mail: null };
     } catch {}
   }
   return null;
@@ -392,19 +407,7 @@ form.addEventListener("submit", async ev => {
   mostra("in-invio");
   const lento = setTimeout(() => { msg.textContent = "Ci sta mettendo più del solito: ancora qualche secondo…"; }, 8000);
 
-  let ris = null;
-  try {
-    // Apps Script: JSON inviato come text/plain evita il preflight CORS. Si aspetta al massimo 15 secondi.
-    const ctrl = new AbortController(), limite = setTimeout(() => ctrl.abort(), 15000);
-    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati), signal: ctrl.signal });
-    clearTimeout(limite);
-    ris = await r.json();
-    if (!r.ok) ris = null;
-  } catch { ris = null; }
-  if (!ris) {                       // risposta persa o troppo lenta: l'ordine potrebbe essere comunque registrato
-    const numero = await cercaOrdine(dati.rid);
-    if (numero) ris = { ok: true, numero: numero, mail: null };
-  }
+  const ris = await inviaScript(dati);   // JSON come text/plain: niente preflight CORS
   clearTimeout(lento);
 
   if (ris && ris.ok) {

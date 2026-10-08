@@ -82,18 +82,28 @@ function doGet(e) {
     if (azione === "esito") {
       // il sito (prenotazioni e shop) chiede se un invio, identificato dal codice rid, è stato registrato
       const rid = String(e.parameter.rid || "");
-      const v = rid ? CacheService.getScriptCache().get("rid_" + rid) : null;
-      return risposta_({ ok: true, registrata: !!v, numero: v && v !== "1" ? v : null });
+      const cache = CacheService.getScriptCache();
+      const v = rid ? cache.get("rid_" + rid) : null;
+      const r = rid ? cache.get("esito_" + rid) : null;   // risposta completa dell'invio, se già pronta
+      return risposta_({ ok: true, registrata: !!v, numero: v && v !== "1" ? v : null, risposta: r ? JSON.parse(r) : null });
     }
     return risposta_({ ok: true, info: "Prenotazioni Sagra di Penco" });
   } catch (err) { return risposta_({ ok: false, errore: String(err.message || err) }); }
 }
 
+// Ogni invio (prenotazione o ordine dello shop) arriva qui.
+// La risposta viene anche conservata per 6 ore sotto il codice dell'invio (rid): la pagina la legge
+// con ?azione=esito&rid=… perché alcuni browser non ricevono la risposta diretta di un POST ad Apps Script.
 function doPost(e) {
-  // Ordini dello shop dei volontari (file "shop" nello stesso progetto, vedi apps-script/shop.gs):
-  // usano lo stesso indirizzo /exec e vengono smistati qui. NON TOGLIERE questa riga.
-  if (typeof shopEOrdine_ === "function" && shopEOrdine_(e)) return shopOrdine_(e);
+  let rid = "";
+  try { rid = String(JSON.parse(e.postData.contents).rid || "").slice(0, 40); } catch (err) {}
+  // Ordini dello shop dei volontari (file "shop" nello stesso progetto): NON TOGLIERE questa riga.
+  const out = (typeof shopEOrdine_ === "function" && shopEOrdine_(e)) ? shopOrdine_(e) : prenotazione_(e);
+  if (rid) { try { CacheService.getScriptCache().put("esito_" + rid, out.getContent(), 21600); } catch (err) {} }
+  return out;
+}
 
+function prenotazione_(e) {
   const lock = LockService.getScriptLock();
   let preso = false;
   try {

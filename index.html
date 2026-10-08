@@ -523,16 +523,27 @@ function preparaTurni(e) {
   if (scelto && d.turni[scelto] && !d.turni[scelto].esaurito) selOrario.value = scelto;
 }
 const pannello = document.querySelector(".pren-in");
-async function verificaRegistrata(rid) {
-  for (let i = 0; i < 8; i++) {
-    await new Promise(r => setTimeout(r, i ? 2500 : 800));
+// Invio ad Apps Script. Dopo un POST Google rimanda il browser a un secondo indirizzo da cui leggere la
+// risposta, e in alcuni browser quel rimando resta appeso. Quindi: si invia SENZA seguire il rimando (torna
+// appena lo script ha finito) e poi si legge l'esito, conservato dallo script sotto il codice dell'invio.
+async function inviaScript(dati) {
+  let finito = false;
+  try {
+    const ctrl = new AbortController(), limite = setTimeout(() => ctrl.abort(), 45000);   // un avvio a freddo di Apps Script può durare 30 s
+    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati), redirect: "manual", signal: ctrl.signal });
+    clearTimeout(limite);
+    finito = true;
+    if (r.type !== "opaqueredirect") { try { return await r.json(); } catch {} }
+  } catch {}
+  for (let i = 0; i < (finito ? 6 : 10); i++) {
+    if (i) await new Promise(r => setTimeout(r, 1500));
     try {
-      const r = await fetch(`${FORM_ENDPOINT}?azione=esito&rid=${encodeURIComponent(rid)}`, { cache: "no-store" });
-      const x = await r.json();
-      if (x.registrata) return true;
+      const x = await fetch(`${FORM_ENDPOINT}?azione=esito&rid=${encodeURIComponent(dati.rid)}`, { cache: "no-store" }).then(r => r.json());
+      if (x.risposta) return x.risposta;
+      if (x.registrata) return { ok: true, numero: x.numero || "—", mail: null };
     } catch {}
   }
-  return false;
+  return null;
 }
 function mostraStato(s) { pannello.dataset.stato = s; dlg.scrollTop = 0; pannello.scrollTop = 0; }
 function ripristinaInvio() { invia.disabled = false; mostraStato("form"); }
@@ -578,18 +589,8 @@ form.addEventListener("submit", async ev => {
   const lento = setTimeout(() => {
     document.querySelector("#stato-invio .piccolo").textContent = "Ci sta mettendo più del solito: ancora qualche secondo…";
   }, 8000);
-  try {
-    // si aspetta al massimo 15 secondi, poi si passa alla verifica
-    const ctrl = new AbortController(), limite = setTimeout(() => ctrl.abort(), 15000);
-    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati), signal: ctrl.signal });
-    clearTimeout(limite);
-    ris = await r.json();
-    ok = r.ok && ris.ok;
-  } catch {
-    // la risposta non è arrivata (succede con alcuni browser): chiediamo allo script se la prenotazione è stata registrata
-    ris = null;
-    ok = await verificaRegistrata(dati.rid);
-  }
+  ris = await inviaScript(dati);
+  ok = !!(ris && ris.ok);
   await attesaMinima;
   clearTimeout(lento);
   document.querySelector("#stato-invio .piccolo").textContent = "Stiamo registrando la prenotazione, ci vuole qualche secondo.";
