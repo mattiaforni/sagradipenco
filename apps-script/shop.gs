@@ -5,14 +5,8 @@
  * INSTALLAZIONE (una volta sola, dall'account sagradipenco@gmail.com)
  *  1. Apri il foglio delle prenotazioni → Estensioni → Apps Script.
  *  2. Nel menu a sinistra, "+" accanto a File → Script → chiamalo "shop" → incolla tutto questo file → salva.
- *  3. Apri il file delle prenotazioni e, nella funzione doPost, aggiungi come PRIMA riga dentro le graffe:
- *
- *         if (shopEOrdine_(e)) return shopOrdine_(e);
- *
- *     così:   function doPost(e) {
- *               if (shopEOrdine_(e)) return shopOrdine_(e);
- *               ...resto invariato...
- *     Salva.
+ *  3. Niente da fare: il file delle prenotazioni (apps-script/prenotazioni.gs, versione dell'8/10 o successiva)
+ *     smista già gli ordini dello shop all'inizio di doPost. Se usi una versione più vecchia, aggiornala.
  *  4. Seleziona la funzione shopSetup ed esegui (concedi i permessi richiesti): crea i tab "Shop ordini"
  *     e "Shop totali" e attiva l'aggiornamento automatico dei totali quando modifichi il foglio.
  *  5. Esegui shopTest: nel tab "Shop ordini" compare un ordine di prova → controlla e cancella le sue righe

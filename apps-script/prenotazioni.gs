@@ -22,6 +22,9 @@
  *      - un avviso immediato quando un evento o un turno raggiunge la capienza, sia per le prenotazioni
  *        dal sito sia per quelle scritte a mano nel foglio (per provarlo: esegui "controllaLimiti").
  *
+ * SHOP: nello stesso progetto c'è anche il file "shop" (ordini della pagina /shop). Questo file
+ * smista già gli ordini allo shop all'inizio di doPost: sostituendo questo file non serve aggiungere nulla.
+ *
  * SE MODIFICHI QUESTO CODICE: Distribuisci → Gestisci distribuzioni → ✎ → Versione: Nuova → Distribuisci.
  * (Senza questo passaggio il sito continua a usare la versione vecchia.)
  *
@@ -86,6 +89,10 @@ function doGet(e) {
 }
 
 function doPost(e) {
+  // Ordini dello shop dei volontari (file "shop" nello stesso progetto, vedi apps-script/shop.gs):
+  // usano lo stesso indirizzo /exec e vengono smistati qui. NON TOGLIERE questa riga.
+  if (typeof shopEOrdine_ === "function" && shopEOrdine_(e)) return shopOrdine_(e);
+
   const lock = LockService.getScriptLock();
   let preso = false;
   try {
