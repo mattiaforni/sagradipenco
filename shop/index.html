@@ -126,6 +126,10 @@ form input:focus,form textarea:focus{outline:2px solid var(--blu);outline-offset
 .esito.errore{color:var(--rosso)}
 .nascosto{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
 .fatto{text-align:center;padding:2rem 0}
+.in-invio{text-align:center;padding:3.5rem 0 2rem}
+.in-invio .ruota{width:64px;height:64px;border-width:6px;border-color:var(--carta-scura);border-top-color:var(--rosso);border-right-color:var(--blu);margin:0 auto 1.3rem}
+.in-invio h3{font-family:var(--titoli);font-style:italic;color:var(--rosso);font-size:1.8rem;margin:0 0 .4rem}
+.in-invio p{font-style:italic;color:var(--tenue);margin:0 auto;max-width:32ch}
 .fatto h3{font-family:var(--titoli);font-style:italic;color:var(--rosso);font-size:1.8rem;margin:0 0 .4rem;border:0;padding:0;text-transform:none;letter-spacing:0}
 .fatto .numero{font-family:var(--gotica);font-size:2.6rem;color:var(--blu);letter-spacing:.04em;margin:.2rem 0 .8rem}
 
@@ -182,6 +186,11 @@ footer{text-align:center;padding:32px 20px 10px;font-size:.9rem;color:var(--tenu
         <button class="bottone" id="invia" type="submit">Invia ordine</button>
       </form>
     </div>
+    <div class="in-invio" id="in-invio" hidden role="status" aria-live="polite">
+      <div class="ruota" aria-hidden="true"></div>
+      <h3>Invio dell'ordine in corso…</h3>
+      <p id="in-invio-msg">Ci vuole qualche secondo, non chiudere la pagina.</p>
+    </div>
     <div class="fatto" id="fatto" hidden>
       <h3>Ordine ricevuto, grazie!</h3>
       <p>Il numero del tuo ordine è</p>
@@ -233,9 +242,11 @@ const esc = s => String(s).replace(/[&<>"]/g, c => ({ "&":"&amp;", "<":"&lt;", "
 const prodotto = id => CATALOGO.find(p => p.id === id);
 
 /* ---------- carrello (resta salvato sul telefono) ---------- */
+let ridOrdine = null;   // codice dell'invio: resta uguale se si riprova, cambia se cambia il carrello
+const nuovoRid = () => Date.now().toString(36) + Math.random().toString(36).slice(2, 8);
 let carrello = [];
 try { carrello = JSON.parse(localStorage.getItem("shop-penco") || "[]").filter(r => prodotto(r.id) && r.qt > 0); } catch { carrello = []; }
-function salva() { try { localStorage.setItem("shop-penco", JSON.stringify(carrello)); } catch {} }
+function salva() { ridOrdine = null; try { localStorage.setItem("shop-penco", JSON.stringify(carrello)); } catch {} }
 function aggiungi(id, variante, qt) {
   const r = carrello.find(x => x.id === id && x.variante === variante);
   if (r) r.qt = Math.min(99, r.qt + qt); else carrello.push({ id, variante, qt });
@@ -343,10 +354,29 @@ document.getElementById("righe").addEventListener("click", ev => {
   else if (b.dataset.riga !== undefined) { const r = carrello[+b.dataset.riga]; r.qt = Math.max(1, Math.min(99, r.qt + +b.dataset.d)); }
   salva(); disegnaRighe(); aggiornaBarra();
 });
+function mostra(parte) {
+  ["contenuto-ordine", "in-invio", "fatto"].forEach(id => document.getElementById(id).hidden = id !== parte);
+  document.getElementById("chiudi").style.visibility = parte === "in-invio" ? "hidden" : "";
+  dlg.scrollTop = 0;
+}
+// durante l'invio la finestra non si chiude (Esc compreso): l'ordine potrebbe essere già partito
+dlg.addEventListener("cancel", ev => { if (!document.getElementById("in-invio").hidden) ev.preventDefault(); });
 document.getElementById("apri-carrello").onclick = () => {
-  document.getElementById("contenuto-ordine").hidden = false; document.getElementById("fatto").hidden = true;
+  mostra("contenuto-ordine");
   esito.textContent = ""; esito.className = "esito"; disegnaRighe(); dlg.showModal();
 };
+// se la risposta non arriva, chiede allo script se l'ordine con questo codice è stato registrato
+async function cercaOrdine(rid) {
+  for (let i = 0; i < 8; i++) {
+    await new Promise(r => setTimeout(r, i ? 2500 : 800));
+    try {
+      const r = await fetch(`${FORM_ENDPOINT}?azione=esito&rid=${encodeURIComponent(rid)}`, { cache: "no-store" });
+      const x = await r.json();
+      if (x.registrata) return x.numero || "—";
+    } catch {}
+  }
+  return null;
+}
 document.getElementById("chiudi").onclick = () => dlg.close();
 document.getElementById("chiudi-fatto").onclick = () => dlg.close();
 
@@ -354,29 +384,44 @@ form.addEventListener("submit", async ev => {
   ev.preventDefault(); esito.className = "esito"; esito.textContent = "";
   if (!carrello.length) return;
   if (!form.reportValidity()) return;
-  const invia = document.getElementById("invia");
-  invia.disabled = true; invia.innerHTML = `<span class="ruota" aria-hidden="true"></span>Invio in corso…`;
-  form.setAttribute("aria-busy", "true");
-  esito.className = "esito attesa"; esito.textContent = "Ci vuole qualche secondo, non chiudere la pagina.";
+  if (!ridOrdine) ridOrdine = nuovoRid();
+  const f = Object.fromEntries(new FormData(form));
+  const dati = { azione: "ordine", rid: ridOrdine, ...f, righe: carrello.map(r => ({ id: r.id, variante: r.variante, qt: r.qt })), totale: totale() };
+  const msg = document.getElementById("in-invio-msg");
+  msg.textContent = "Ci vuole qualche secondo, non chiudere la pagina.";
+  mostra("in-invio");
+  const lento = setTimeout(() => { msg.textContent = "Ci sta mettendo più del solito: ancora qualche secondo…"; }, 8000);
+
+  let ris = null;
   try {
-    const f = Object.fromEntries(new FormData(form));
-    const dati = { azione: "ordine", ...f, righe: carrello.map(r => ({ id: r.id, variante: r.variante, qt: r.qt })), totale: totale() };
-    // Apps Script: JSON inviato come text/plain evita il preflight CORS
-    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati) });
-    const ris = await r.json();
-    if (!r.ok || !ris.ok) throw new Error(ris.errore || "errore");
-    document.getElementById("numero-ordine").textContent = ris.numero;
-    document.getElementById("mail-inviata").hidden = !ris.mail;
-    document.getElementById("contenuto-ordine").hidden = true; document.getElementById("fatto").hidden = false;
-    carrello = []; salva(); aggiornaBarra(); form.reset();
-  } catch (e) {
-    esito.className = "esito";
-    esito.textContent = "Invio non riuscito: riprova tra poco. Il carrello resta salvato.";
-    esito.classList.add("errore");
-  } finally {
-    invia.disabled = !carrello.length; invia.textContent = "Invia ordine";
-    form.removeAttribute("aria-busy");
+    // Apps Script: JSON inviato come text/plain evita il preflight CORS. Si aspetta al massimo 15 secondi.
+    const ctrl = new AbortController(), limite = setTimeout(() => ctrl.abort(), 15000);
+    const r = await fetch(FORM_ENDPOINT, { method: "POST", body: JSON.stringify(dati), signal: ctrl.signal });
+    clearTimeout(limite);
+    ris = await r.json();
+    if (!r.ok) ris = null;
+  } catch { ris = null; }
+  if (!ris) {                       // risposta persa o troppo lenta: l'ordine potrebbe essere comunque registrato
+    const numero = await cercaOrdine(dati.rid);
+    if (numero) ris = { ok: true, numero: numero, mail: null };
   }
+  clearTimeout(lento);
+
+  if (ris && ris.ok) {
+    document.getElementById("numero-ordine").textContent = ris.numero;
+    const m = document.getElementById("mail-inviata");
+    m.hidden = !(ris.mail || (ris.mail === null && f.email));
+    m.textContent = ris.mail ? "Ti abbiamo mandato il riepilogo via email." : "Se hai lasciato l'email, ti arriverà il riepilogo.";
+    mostra("fatto");
+    carrello = []; salva(); aggiornaBarra(); form.reset();
+    return;
+  }
+  mostra("contenuto-ordine");
+  esito.className = "esito errore";
+  esito.textContent = (ris && ris.errore)
+    ? "Ordine non inviato: " + ris.errore
+    : "Non riusciamo a confermare l'invio. Se ti arriva la mail di riepilogo l'ordine è registrato; altrimenti riprova: non si creano doppioni. Il carrello resta salvato.";
+  esito.scrollIntoView({ block: "center" });
 });
 
 aggiornaBarra();

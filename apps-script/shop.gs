@@ -66,10 +66,15 @@ function shopOrdine_(e) {
       return { p, variante, qt, chiave: (ordineArticoli.indexOf(r.id) + 1) * 100 + iv };
     });
 
+    const cache = CacheService.getScriptCache();
+    const rid = String(d.rid || "").slice(0, 40);      // codice dell'invio, generato dalla pagina
     const lock = LockService.getScriptLock();
     lock.waitLock(20000);
     let numero, totale = 0;
     try {
+      // stesso codice già registrato (risposta persa e ordine reinviato): non si scrive un doppione
+      const gia = rid && cache.get("rid_" + rid);
+      if (gia) return shopRisposta_({ ok: true, numero: gia, duplicata: true });
       const sh = shopTab_();
       const props = PropertiesService.getScriptProperties();
       const n = Number(props.getProperty("SHOP_ULTIMO") || 0) + 1;
@@ -87,6 +92,7 @@ function shopOrdine_(e) {
       sh.getRange(inizio, 1, valori.length, 1).setNumberFormat("dd/MM/yyyy HH:mm");
       sh.getRange(inizio, 10, valori.length, 2).setNumberFormat("€ #,##0.00");
       SpreadsheetApp.flush();
+      if (rid) cache.put("rid_" + rid, numero, 21600);  // la pagina può chiedere ?azione=esito&rid=… (doGet in prenotazioni.gs)
       shopAggiornaTotali();
     } finally {
       lock.releaseLock();

@@ -80,9 +80,10 @@ function doGet(e) {
       return ContentService.createTextOutput('{"ok":true,"eventi":' + json + '}').setMimeType(ContentService.MimeType.JSON);
     }
     if (azione === "esito") {
-      // il sito chiede se una prenotazione (identificata dal codice rid) è stata registrata
+      // il sito (prenotazioni e shop) chiede se un invio, identificato dal codice rid, è stato registrato
       const rid = String(e.parameter.rid || "");
-      return risposta_({ ok: true, registrata: !!(rid && CacheService.getScriptCache().get("rid_" + rid)) });
+      const v = rid ? CacheService.getScriptCache().get("rid_" + rid) : null;
+      return risposta_({ ok: true, registrata: !!v, numero: v && v !== "1" ? v : null });
     }
     return risposta_({ ok: true, info: "Prenotazioni Sagra di Penco" });
   } catch (err) { return risposta_({ ok: false, errore: String(err.message || err) }); }
