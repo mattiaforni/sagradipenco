@@ -8,16 +8,19 @@
  * 3. In alto scegli la funzione "setup" e premi ▶ Esegui. Concedi i permessi quando li chiede
  *    (Avanzate → Vai a … (non sicuro) → Consenti). Il foglio si riempie con i tab:
  *      Config        → capienze, turni, chiusure, email: QUI si regolano i limiti
- *      Destinatari   → chi riceve il recap serale delle prenotazioni (un indirizzo per riga)
+ *      Destinatari   → chi riceve il recap del mattino e gli avvisi "esaurito" (un indirizzo per riga)
  *      Riepilogo     → prenotati / posti rimasti per ogni evento e turno (formule, si aggiorna da solo)
  *      un tab per ogni evento con form online → l'elenco delle prenotazioni
  * 4. Distribuisci → Nuova distribuzione → tipo "Applicazione web":
  *      Descrizione: prenotazioni · Esegui come: Me · Chi ha accesso: Chiunque
  *    Copia l'URL dell'app web (finisce con /exec) e incollalo in FORM_ENDPOINT nel file index.html.
  * 5. Condividi il foglio (bottone Condividi) con chi deve vedere o inserire le prenotazioni.
- * 6. Recap serale: scrivi gli indirizzi nel tab Destinatari, poi esegui una volta la funzione
- *    "installaRecap": da quel momento ogni sera all'ora indicata in ORA_RECAP parte una mail con
- *    il punto delle prenotazioni e le nuove della giornata. Per provarlo subito: esegui "recapGiornaliero".
+ * 6. Avvisi automatici: scrivi gli indirizzi nel tab Destinatari, poi esegui una volta la funzione
+ *    "installaRecap". Attiva due cose:
+ *      - ogni mattina all'ora ORA_RECAP una mail con il punto delle prenotazioni e quelle arrivate ieri
+ *        (per provarlo subito: esegui "recapGiornaliero");
+ *      - un avviso immediato quando un evento o un turno raggiunge la capienza, sia per le prenotazioni
+ *        dal sito sia per quelle scritte a mano nel foglio (per provarlo: esegui "controllaLimiti").
  *
  * SE MODIFICHI QUESTO CODICE: Distribuisci → Gestisci distribuzioni → ✎ → Versione: Nuova → Distribuisci.
  * (Senza questo passaggio il sito continua a usare la versione vecchia.)
@@ -33,7 +36,7 @@
 const NOME_MITTENTE   = "Sagra di Penco";          // nome che compare nelle email
 const EMAIL_IN_COPIA  = "";                         // eventuale indirizzo in copia a ogni conferma; vuoto = nessuna copia (le conferme restano nella posta dell'account che esegue lo script)
 const FUSO            = "Europe/Rome";
-const ORA_RECAP       = 21;                         // ora (0-23) del recap serale
+const ORA_RECAP       = 8;                          // ora (0-23) del recap del mattino (riporta le prenotazioni di ieri)
 
 // Valori iniziali del tab Config (poi si modificano nel foglio, non qui).
 // id = deve coincidere con l'id dell'evento nel sito.
@@ -52,7 +55,7 @@ const CONFIG_NOTE = [
   "Orari separati da virgola (es. 12:00, 12:30). Vuoto = nessun turno.",
   "Posti per ogni turno. Vuoto = senza limite per turno.",
   "Data e ora oltre cui il form si chiude (AAAA-MM-GG HH:MM). Vuoto = mai.",
-  "Chi riceve l'avviso di ogni nuova prenotazione (più indirizzi separati da virgola). Vuoto = nessun avviso, basta il recap serale.",
+  "Chi riceve l'avviso di ogni nuova prenotazione (più indirizzi separati da virgola). Vuoto = nessun avviso, basta il recap del mattino.",
   "SI = form attivo sul sito. NO = chiuso a mano.",
   "Nomi delle due quantità chieste (separati da |): diventano le intestazioni delle colonne E ed F del tab."
 ];
@@ -124,6 +127,7 @@ function doPost(e) {
     let mail = true;
     try { confermaOspite_(d, cfg); } catch (err) { mail = false; console.error("Conferma non inviata: " + err); }
     try { avvisaOrganizzatori_(d, cfg, stato); } catch (err) { console.error("Avviso non inviato: " + err); }
+    try { controllaLimiti_(cfg.id); } catch (err) { console.error("Controllo limiti: " + err); }
     return risposta_({ ok: true, mail: mail });
   } catch (err) {
     return risposta_({ ok: false, errore: String(err.message || err) });
@@ -152,7 +156,7 @@ function setup() {
   if (!ss.getSheetByName("Destinatari")) {
     const d = ss.insertSheet("Destinatari", 1);
     d.appendRow(["email", "nome (facoltativo)"]);
-    d.appendRow(["Un indirizzo per riga: ricevono il recap serale delle prenotazioni.", ""]);
+    d.appendRow(["Un indirizzo per riga: ricevono il recap del mattino e gli avvisi di posti esauriti.", ""]);
     d.getRange(1, 1, 1, 2).setFontWeight("bold").setBackground("#204f7a").setFontColor("#ffffff");
     d.getRange(2, 1).setFontStyle("italic").setFontColor("#5b544b");
     d.setFrozenRows(2); d.setColumnWidth(1, 280);
@@ -318,12 +322,60 @@ Foglio: ${SpreadsheetApp.getActiveSpreadsheet().getUrl()}`
   });
 }
 
-// ---- Recap serale ----------------------------------------------------------------
+// ---- Recap del mattino e avvisi "esaurito" -------------------------------------------
 
 function installaRecap() {
-  ScriptApp.getProjectTriggers().forEach(t => { if (t.getHandlerFunction() === "recapGiornaliero") ScriptApp.deleteTrigger(t); });
+  const gestite = ["recapGiornaliero", "controllaLimiti"];
+  ScriptApp.getProjectTriggers().forEach(t => { if (gestite.includes(t.getHandlerFunction())) ScriptApp.deleteTrigger(t); });
   ScriptApp.newTrigger("recapGiornaliero").timeBased().everyDays(1).atHour(ORA_RECAP).inTimezone(FUSO).create();
-  Logger.log("Recap serale attivo ogni giorno alle " + ORA_RECAP + ":00 (" + FUSO + ").");
+  // scatta quando qualcuno modifica il foglio (es. prenotazione telefonica scritta a mano)
+  ScriptApp.newTrigger("controllaLimiti").forSpreadsheet(SpreadsheetApp.getActive()).onEdit().create();
+  controllaLimiti_(null, true);   // registra la situazione attuale senza mandare avvisi per i pieni già noti
+  Logger.log("Recap attivo ogni mattina alle " + ORA_RECAP + ":00 (" + FUSO + ") e avvisi di posti esauriti attivi.");
+}
+
+// Funzione chiamata dall'attivatore di modifica del foglio (e utilizzabile a mano per una prova).
+function controllaLimiti() {
+  const lock = LockService.getScriptLock();
+  if (!lock.tryLock(15000)) return;
+  try { controllaLimiti_(null); } finally { lock.releaseLock(); }
+}
+
+// Confronta eventi e turni pieni con quelli già segnalati; manda un avviso solo per i nuovi pieni.
+// soloId: controlla solo quell'evento (dopo una prenotazione dal sito). silenzioso: aggiorna senza mandare mail.
+function controllaLimiti_(soloId, silenzioso) {
+  const props = PropertiesService.getScriptProperties();
+  const segnalati = new Set(JSON.parse(props.getProperty("esauriti") || "[]"));
+  const nuovi = [];
+  Object.values(config_()).forEach(cfg => {
+    if (soloId && cfg.id !== soloId) return;
+    const st = statoEvento_(cfg);
+    const voci = [{ chiave: cfg.id, pieno: st.esaurito, testo: cfg.evento, n: st.prenotati, cap: cfg.capienza }];
+    if (st.turni) Object.entries(st.turni).forEach(([o, x]) =>
+      voci.push({ chiave: cfg.id + "|" + o, pieno: !!(x.capienza && x.prenotati >= x.capienza), testo: `${cfg.evento} — turno delle ${o}`, n: x.prenotati, cap: x.capienza }));
+    voci.forEach(v => {
+      if (v.pieno && !segnalati.has(v.chiave)) { segnalati.add(v.chiave); nuovi.push(v); }
+      if (!v.pieno && segnalati.has(v.chiave)) segnalati.delete(v.chiave);   // riaperto (es. una disdetta): potrà essere segnalato di nuovo
+    });
+  });
+  props.setProperty("esauriti", JSON.stringify([...segnalati]));
+  if (silenzioso || !nuovi.length) return;
+  const dest = destinatari_();
+  if (!dest.length) return;
+  const ora = Utilities.formatDate(new Date(), FUSO, "dd/MM 'alle' HH:mm");
+  MailApp.sendEmail({
+    to: dest.join(","), name: NOME_MITTENTE,
+    subject: `Posti esauriti: ${nuovi.map(v => v.testo).join("; ")}`,
+    body:
+`Raggiunta la capienza (${ora}):
+
+${nuovi.map(v => `- ${v.testo}: ${v.n} prenotati su ${v.cap}`).join("\n")}
+
+Il form sul sito non accetta più prenotazioni per ${nuovi.length === 1 ? "questa voce" : "queste voci"}.
+Per riaprire: aumenta la capienza nel tab Config oppure segna "annullata" qualche prenotazione.
+
+Foglio: ${SpreadsheetApp.getActiveSpreadsheet().getUrl()}`
+  });
 }
 
 function destinatari_() {
@@ -337,8 +389,12 @@ function recapGiornaliero() {
   if (!dest.length) { Logger.log("Nessun destinatario nel tab Destinatari."); return; }
   const ss = SpreadsheetApp.getActiveSpreadsheet();
   const oggi = Utilities.formatDate(new Date(), FUSO, "dd/MM/yyyy");
-  const inizioOggi = new Date(); inizioOggi.setHours(0, 0, 0, 0);
-  let corpo = `Punto prenotazioni al ${oggi}\n\n`;
+  // prenotazioni arrivate ieri (da mezzanotte a mezzanotte): ognuna compare in un solo recap
+  const fine = new Date(); fine.setHours(0, 0, 0, 0);
+  const inizio = new Date(fine); inizio.setDate(inizio.getDate() - 1);
+  const GIORNI_IT = ["domenica", "lunedì", "martedì", "mercoledì", "giovedì", "venerdì", "sabato"];
+  const ieri = GIORNI_IT[Number(Utilities.formatDate(inizio, FUSO, "u")) % 7] + " " + Utilities.formatDate(inizio, FUSO, "dd/MM");
+  let corpo = `Punto prenotazioni al ${oggi}. Le "nuove" sono quelle arrivate ieri (${ieri}).\n\n`;
   let totaleNuove = 0;
 
   Object.values(config_()).forEach(cfg => {
@@ -353,24 +409,24 @@ function recapGiornaliero() {
 
     const t = ss.getSheetByName(cfg.evento);
     const nuove = (t && t.getLastRow() > 1 ? t.getRange(2, 1, t.getLastRow() - 1, COL.length).getValues() : [])
-      .filter(r => r[C.Data] instanceof Date && r[C.Data] >= inizioOggi && String(r[C.Stato]).toLowerCase() !== "annullata");
+      .filter(r => r[C.Data] instanceof Date && r[C.Data] >= inizio && r[C.Data] < fine && String(r[C.Stato]).toLowerCase() !== "annullata");
     totaleNuove += nuove.length;
     if (nuove.length) {
-      corpo += `Nuove oggi (${nuove.length}):\n`;
+      corpo += `Nuove di ieri (${nuove.length}):\n`;
       nuove.forEach(r => {
         const n = Number(r[C.Totale]) || (Number(r[C.Q1]) || 0) + (Number(r[C.Q2]) || 0);
         corpo += `  - ${r[C.Nome]} · ${n} ${n === 1 ? "persona" : "persone"} (${r[C.Q1] || 0} ${cfg.campi[0]}, ${r[C.Q2] || 0} ${cfg.campi[1]})` +
                  `${r[C.Orario] ? " · ore " + normalizzaOrario_(r[C.Orario]) : ""} · ${r[C.Telefono]}${r[C.Canale] === "sito" ? "" : " · " + r[C.Canale]}` +
                  `${r[C.Note] ? " · " + r[C.Note] : ""}\n`;
       });
-    } else corpo += "Nessuna nuova prenotazione oggi.\n";
+    } else corpo += "Nessuna nuova prenotazione ieri.\n";
     corpo += "\n";
   });
   corpo += `Foglio completo: ${ss.getUrl()}\n\nSagra di Penco — sagradipenco.it`;
 
   MailApp.sendEmail({
     to: dest.join(","), name: NOME_MITTENTE,
-    subject: `Prenotazioni Sagra di Penco — ${oggi} (${totaleNuove} nuove)`,
+    subject: `Prenotazioni Sagra di Penco — ${oggi} (${totaleNuove} nuove ieri)`,
     body: corpo
   });
 }
