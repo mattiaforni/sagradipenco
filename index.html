@@ -69,6 +69,7 @@ img{max-width:100%;display:block}
 .voce .riga b{color:var(--blu)}
 .voce .riga .scad{color:var(--rosso)}
 .voce .riga .tel{display:block;width:100%}
+.voce .riga .tel a{white-space:nowrap;color:inherit}
 .voce .ora .logo-ora{height:2.2rem;width:auto;margin:.35rem 0 0 auto}
 /* evento "biblioteca": riquadro rosa come nel materiale del Circolo */
 .voce.biblioteca > div{background:#f1e4e4;border-radius:14px;padding:.8rem .9rem .8rem;display:grid;grid-template-columns:84px minmax(0,1fr);gap:.2rem .9rem;align-items:start}
@@ -88,6 +89,9 @@ img{max-width:100%;display:block}
 .menu b{display:block;font-family:var(--condensata);font-weight:500;letter-spacing:.05em;text-transform:uppercase;color:var(--blu);font-size:.85rem;margin:.3rem 0 .2rem}
 .menu b:first-child{margin-top:0}
 .menu p{margin:0 0 .25rem}
+.menu.listino p{display:flex;align-items:baseline;gap:.4rem;max-width:30rem}
+.menu.listino i{flex:1;border-bottom:1px dotted var(--carta-bordo);transform:translateY(-.25em)}
+.menu.listino p span:last-child{font-variant-numeric:tabular-nums;white-space:nowrap}
 .link-reg{font-family:var(--condensata);letter-spacing:.04em;text-transform:uppercase;font-size:.9rem;color:var(--rosso);background:none;border:0;border-bottom:1px solid var(--rosso);padding:0;cursor:pointer}
 .azioni{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:.6rem;max-width:520px;margin-top:.2rem}
 .azioni.singola{grid-template-columns:1fr}
@@ -289,7 +293,7 @@ dialog.reg::backdrop{background:rgba(23,58,90,.55)}
    esterno ({ente, logo, link}: riga "Iniziativa del [logo]" in fondo alla scheda),
    telefoni ([["chi","numero"],…] se i numeri sono più d'uno), logo (piccolo
    accanto al titolo), stile:"biblioteca" (riquadro rosa),
-   telefono, referente, persone (le due quantità chieste nel modulo: se manca
+   prezzi ([["voce","11,00"],…] listino con prezzi), telefono, referente, persone (le due quantità chieste nel modulo: se manca
    sono ["Adulti","Bambini sotto gli 11 anni"]), sito (false = non pubblicare).
    Capienze, turni e chiusure dei form si gestiscono nel foglio "Config"
    del file prenotazioni, non qui: quando il sito è collegato allo script,
@@ -366,12 +370,14 @@ const EVENTI = [
     prezzo:3, prezzoNota:"contributo", scadenza:"entro mercoledì 14 ottobre",
     prenotazione:"form" },
 
-  { id:"dom-ciccia-asporto", giorno:"dom", ora:"12:00", titolo:"Ciccia da asporto",
-    sottotitolo:"Pranzo da asporto, anche in loco", luogo:"Circolo ARCI",
-    testo:"Pranzo da asporto su prenotazione, con possibilità di mangiare anche al Circolo.",
-    menu:[["Ciccia","Arrosto girato, rosticciana, pollo arrosto, salsicce"],["Contorni","Patate fritte e polenta fritta"]],
+  { id:"dom-ciccia-asporto", giorno:"dom", ora:"12:00", titolo:"Ciccia da asporto", logo:"logo-leccese.png",
+    sottotitolo:"A cura della USD Leccese", luogo:"Circolo ARCI",
+    testo:"Dalle 12, da portare a casa o da mangiare sul posto. Prenotazione obbligatoria.",
+    prezzi:[["Arrosto girato (5 pz)","11,00"],["Rosticciana (5 pz)","8,00"],["Pollo arrosto","13,00"],["½ pollo arrosto","8,00"],
+            ["Salsicce (2 pz)","5,00"],["Patate fritte","3,00"],["Polenta fritta","4,00"]],
     scadenza:"entro giovedì 15 ottobre",
-    prenotazione:"telefono", telefono:"055 8657956", referente:"Circolo ARCI" },
+    prenotazione:"telefono", telefono:"339 8167993",
+    telefoni:[["Tommaso","339 8167993"],["Andrea","380 7869559"],["Circolo ARCI","055 8657956"]] },
 
   { id:"dom-lotteria-biglietti", giorno:"dom", ora:"12:00", fine:"18:00", titolo:"Lotteria gratuita PagaPenco",
     sottotitolo:"Distribuzione dei biglietti gratuiti", luogo:"Circolo ARCI", luogoNota:"e Piazza Manin",
@@ -427,12 +433,15 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
     <h2>${esc(g.nome)}</h2>
     ${visibili.filter(e => e.giorno === g.id).map(e => {
       const pren = !!e.prenotazione;
-      const bottoni = [
+      // prenotazione solo telefonica con più numeri: un bottone per numero
+      const bottoni = (e.telefoni && conTel(e) && !conForm(e))
+        ? e.telefoni.map(t => `<a class="bottone" href="${telHref(t[1])}">☎ ${esc(t[0] || t[1])}</a>`)
+        : [
         conTel(e)  ? `<a class="bottone" href="${telHref(telDi(e))}">☎ Chiama</a>` : "",
         conForm(e) ? `<button class="bottone pieno" type="button" data-prenota="${e.id}">Prenota</button>` : ""
       ].filter(Boolean);
       const telefoniHtml = e.telefoni
-        ? e.telefoni.map(t => `${t[0] ? esc(t[0]) + " " : ""}<b>${esc(t[1])}</b>`).join(" · ")
+        ? e.telefoni.map(t => `${t[0] ? esc(t[0]) + " " : ""}<a href="${telHref(t[1])}"><b>${esc(t[1])}</b></a>`).join(" · ")
         : (conTel(e) && !conForm(e) ? `${esc(e.referente || "")} <b>${esc(telDi(e))}</b>` : "");
       return `
     <article class="voce ${e.stile || ""}" id="ev-${e.id}">
@@ -445,6 +454,7 @@ document.getElementById("giorni").innerHTML = GIORNI.map(g => `
         ${e.sottotitolo ? `<p><em>${esc(e.sottotitolo)}</em></p>` : ""}
         <p>${esc(e.testo)}</p>
         ${e.menu ? `<div class="menu">${e.menu.map(m => m[1] ? `<p><em>${esc(m[0])}:</em> ${esc(m[1])}</p>` : `<b>${esc(m[0])}</b>`).join("")}</div>` : ""}
+        ${e.prezzi ? `<div class="menu listino"><b>Menu</b>${e.prezzi.map(([v, p]) => `<p><span>${esc(v)}</span><i></i><span>€ ${esc(p)}</span></p>`).join("")}</div>` : ""}
         ${e.regolamento ? `<p><button class="link-reg" type="button" data-regolamento>Leggi il regolamento</button></p>` : ""}
         ${pren ? `<div class="riga">
           ${e.prezzo != null ? `<span><b>€ ${e.prezzo}</b>${e.prezzoNota ? " · " + esc(e.prezzoNota) : ""}</span>` : ""}
