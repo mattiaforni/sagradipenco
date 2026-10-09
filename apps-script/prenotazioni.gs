@@ -210,19 +210,32 @@ function riepilogo_() {
   let r = ss.getSheetByName("Riepilogo");
   if (r) ss.deleteSheet(r);
   r = ss.insertSheet("Riepilogo", 1);
-  const righe = [["Evento", "Turno", "Capienza", "Prenotati", "Posti rimasti"]];
+  const testo = [["Evento", "Turno", "Capienza", "Prenotati", "Posti rimasti"]];
+  const formule = [];   // [riga, colonna, formula]: scritte a parte, vedi sotto
   Object.values(config_()).forEach(c => {
     const t = "'" + c.evento.replace(/'/g, "''") + "'";
-    const somma = orario => `=SUMIFS(${t}!G:G, ${t}!K:K, "<>annullata"` + (orario ? `, ${t}!H:H, "${orario}"` : "") + `)`;
-    righe.push([c.evento, "totale", c.capienza || "", somma(""), c.capienza ? `=C${righe.length + 1}-D${righe.length + 1}` : "senza limite"]);
+    let y = testo.length + 1;
+    testo.push([c.evento, "totale", c.capienza || "", "", c.capienza ? "" : "senza limite"]);
+    formule.push([y, 4, `=SUMIFS(${t}!G2:G, ${t}!K2:K, "<>annullata")`]);
+    if (c.capienza) formule.push([y, 5, `=C${y}-D${y}`]);
     c.turni.forEach(o => {
-      righe.push(["", o, c.capienzaTurno || "", somma(o), c.capienzaTurno ? `=C${righe.length + 1}-D${righe.length + 1}` : "senza limite"]);
+      y = testo.length + 1;
+      testo.push(["", o, c.capienzaTurno || "", "", c.capienzaTurno ? "" : "senza limite"]);
+      // TEXT(...,"hh:mm"): nella colonna Orario Fogli trasforma "12:30" in un orario, non in testo
+      formule.push([y, 4, `=SUMPRODUCT((${t}!K2:K<>"annullata")*(TEXT(${t}!H2:H, "hh:mm")="${o}"), ${t}!G2:G)`]);
+      if (c.capienzaTurno) formule.push([y, 5, `=C${y}-D${y}`]);
     });
   });
-  r.getRange(1, 1, righe.length, 5).setValues(righe);
+  r.getRange(1, 1, testo.length, 5).setValues(testo);
+  // Le formule si scrivono con setFormula e la virgola come separatore. Se il foglio non le accetta
+  // (impostazioni locali italiane: il separatore è il punto e virgola), si riscrivono con ";".
+  const scrivi = sep => formule.forEach(([y, x, f]) => r.getRange(y, x).setFormula(sep === "," ? f : f.replace(/, /g, "; ")));
+  scrivi(",");
+  SpreadsheetApp.flush();
+  if (formule.length && /^#(ERROR|ERRORE)/i.test(r.getRange(formule[0][0], formule[0][1]).getDisplayValue())) scrivi(";");
   r.getRange(1, 1, 1, 5).setFontWeight("bold").setBackground("#204f7a").setFontColor("#ffffff");
   r.setFrozenRows(1); r.setColumnWidth(1, 240);
-  r.getRange(2, 5, righe.length - 1, 1).setFontWeight("bold");
+  r.getRange(2, 5, testo.length - 1, 1).setFontWeight("bold");
 }
 
 // ---- Letture ------------------------------------------------------------------
